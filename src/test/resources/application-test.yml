@@ -1,0 +1,7 @@
+# Testcontainers supplies datasource properties; never fall back to a developer database.
+spring:
+  jpa:
+    show-sql: false
+logging:
+  level:
+    com.gdrn: INFO

@@ -1,0 +1,159 @@
+# GDRN architecture foundation
+
+## Objective and current scope
+
+Global Disaster Response Network is a university simulation of disaster response
+coordination. It is not an operational emergency response system. The repository
+currently provides the development foundation only: one Java 21 Spring Boot
+application, database infrastructure, technical endpoints, tests, Docker and CI.
+No business model, CRUD endpoint, authentication flow, or business schema exists.
+
+`GDRN_CODEX_PROJECT_CONTEXT.md` is preserved as the long-term project context. Its
+JWT, API examples, proposed tables and completed Phase 1 rubric describe future
+work. The bootstrap request narrows the current scope and uses ADR 004 for planned
+internal events; a JWT decision is deferred until Identity requirements are analyzed.
+
+## Architecture and deployment
+
+Phase 1 uses a Modular Monolith with DDD concepts and Hexagonal/Clean Architecture.
+One deployable application and one PostgreSQL/PostGIS instance keep deployment and
+transactions local. Modules provide logical boundaries, not separate services.
+DDD starts with requirements, language and business invariants; there are no
+invented aggregates or generic base entities in this foundation.
+
+```mermaid
+flowchart LR
+    Client --> Backend[Single GDRN Spring Boot application]
+    Backend --> DB[(PostgreSQL + PostGIS)]
+```
+
+Only the main application and shared technical configuration currently exist.
+Future modules below are reserved by documentation, without placeholder classes.
+
+| Package under `com.gdrn` | Planned responsibility |
+| --- | --- |
+| identity | Authentication, authorization, users and roles |
+| disaster | Disaster lifecycle and management |
+| reporting | Citizen incident reports |
+| rescue | Requests, teams and missions |
+| resource | Emergency resources and allocations |
+| alert | Emergency alerts |
+| geo | Geographic operations and spatial risk functionality |
+| shared | Small, justified technical/shared concerns; currently security and OpenAPI configuration |
+
+## Future module structure
+
+Create packages only when a use case requires them:
+
+```text
+<module>/
+  api/
+    controller/
+    request/
+    response/
+  application/
+    command/
+    query/
+    usecase/
+    port/
+  domain/
+    model/
+    service/
+    event/
+    repository/
+  infrastructure/
+    persistence/
+      entity/
+      repository/
+      adapter/
+      mapper/
+    configuration/
+```
+
+## Dependencies and request flow
+
+API → Application → Domain. Infrastructure → Application/Domain ports.
+At runtime: HTTP → controller → use case → domain/port → infrastructure adapter → DB.
+An adapter implements the inner interface; the inner layer never imports it.
+
+- **Domain:** plain Java; no Spring, JPA, Hibernate, PostgreSQL/JDBC, Jackson,
+  HTTP, application, API or infrastructure dependencies. No `@Entity`, `@Table`,
+  `@Repository`, `@Service` or `@RestController` annotations.
+- **Application:** commands, queries, use cases and ports. May depend on domain;
+  no outer-layer or persistence implementation dependencies and no HTTP details.
+- **API:** HTTP DTOs, validation and mapping, invoking use cases. No business logic,
+  direct persistence access, or repository-port calls that bypass use cases.
+- **Infrastructure:** database/framework integration and mappings; JPA models stay
+  separate from domain models and REST representations.
+- **Modules:** never import another module's infrastructure, entities, repositories,
+  adapters or internal implementations. Introduce explicit published application
+  contracts/facades, ports or in-process events only with a real use case.
+
+ArchUnit automatically imports production code and enforces domain independence,
+application isolation, API persistence isolation and cross-module infrastructure
+isolation. Empty selections are permitted per rule because business packages are
+not implemented. This does not disable rules for future code. Semantic rules such
+as business logic placement and defining a published contract still require review;
+the precise public-contract convention will be tested when the first contract exists.
+
+## Database strategy
+
+Use one PostgreSQL 16/PostGIS 3.5 database with Flyway owning schema evolution.
+Hibernate validates schema; it never creates/updates it. Open Session in View is off.
+`V1__enable_postgis.sql` enables the extension only. PostGIS itself supplies extension
+objects and Flyway supplies its history table; neither is a business schema.
+The local PostGIS image may pre-enable the extension, so the migration is idempotent.
+The local database owner can install extensions; future restricted deployments
+must arrange extension privileges or provision PostGIS before migration.
+
+Requirements → Domain Model → Persistence Model → Database Schema → Flyway Migration.
+No database-first business design without a specific future justification. Add
+Hibernate Spatial only when actual mapped spatial attributes require it; SQL verifies
+PostGIS today without an unused ORM spatial dependency.
+
+## Technical HTTP and security foundation
+
+Actuator exposes health only, with details hidden. GET access to health, OpenAPI
+and Swagger assets is public for development. Every other request is denied.
+Security uses no generated user, login, registration, roles, tokens or fake identity.
+CSRF protection remains enabled; there are no permitted write endpoints. Request
+caching is off and session creation is stateless. Identity must revisit security
+policy with real requirements. Swagger metadata exists with no business operations.
+
+## Testing and CI
+
+`mvnw test` runs ArchUnit through Surefire without Docker. `mvnw verify` also runs
+Failsafe's `GdrnApplicationIT` using an isolated PostGIS Testcontainer and a real HTTP
+server. It verifies application startup, Flyway history, PostGIS spatial behavior,
+public technical endpoints and denied requests. Missing Docker fails integration
+tests; nothing is silently skipped. Test datasource values come from the container,
+not `.env`. JUnit 5 and Mockito arrive through Spring Boot Test.
+
+Future domain tests use plain Java; application tests mock ports; persistence and
+important API/security tests use Testcontainers. CI on pushes and pull requests
+sets up Java 21, runs clean verify, validates Compose and builds the Docker image.
+Docker image assembly skips executing tests because Testcontainers requires a
+Docker daemon; the preceding CI verify is the test gate.
+
+## Phase 1 and Phase 2
+
+Business slices, security and benchmark workloads are planned later in Phase 1.
+Internal events may be introduced in-process; delivery, transaction timing and
+failure semantics are not decided or implemented. Examples such as
+`IncidentReportSubmitted`, `DisasterDetected`, `DisasterEscalated`, `RescueRequested`,
+`RescueTeamAssigned` and `EmergencyAlertCreated` are documentation only.
+
+No microservices, brokers, Redis, Kubernetes, API gateway, service discovery,
+distributed transactions/tracing, separate module databases or cloud infrastructure
+are introduced. Phase 2 improvements need observed quality-attribute problems,
+an ADR and comparable before/after benchmarks. No performance gain is claimed.
+
+## Sources for dependency choices
+
+- [Spring Boot 3.5 reference](https://docs.spring.io/spring-boot/3.5/reference/index.html)
+- [Springdoc compatibility matrix: Boot 3.5 and Springdoc 2.8](https://springdoc.org/v2/)
+- [PostGIS Docker images](https://github.com/postgis/docker-postgis)
+- [Testcontainers database integration](https://java.testcontainers.org/modules/databases/)
+
+Versions are pinned in `pom.xml`, wrapper properties and Docker files. Review patch
+updates and upstream support before any deployment beyond this course environment.
