@@ -963,7 +963,3 @@ Pha 2 không thay đổi kiến trúc theo xu hướng hoặc để tăng số l
 
 Đây là trọng tâm của đề tài GDRN trong môn Kiến trúc Phần mềm.
 """
-
-out = "/mnt/data/GDRN_Mo_Ta_Du_An.md"
-pypandoc.convert_text(content, 'md', format='md', outputfile=out, extra_args=['--standalone'])
-print(out)
