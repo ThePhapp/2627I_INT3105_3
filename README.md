@@ -12,9 +12,18 @@ currently contains the bootstrap foundation, not a functioning disaster response
 và [bộ 16 prompt chia theo người, có thứ tự phụ thuộc](docs/PROMPTS_PHA_1_4_NGUOI.md).
 Đây là kế hoạch phát triển, không phải danh sách tính năng đã hoàn thành.
 
+**P00 design baseline (planned):** [HTTP/OpenAPI và 15 API/6 màn hình](docs/api/phase1-contract.md),
+[published module contracts và sổ migration](docs/architecture/phase1-module-contracts.md),
+[ADR 005: MVP/auth/frontend](docs/adr/005-phase1-mvp-auth-frontend.md),
+[tiến độ](docs/phase1-progress.md), [handoff P00](docs/handoffs/P00.md).
+MVP ba tuần giới hạn Identity/Disaster/Reporting/Rescue và SPA cơ bản. Resource/Alert,
+Geo risk, RescueRequest riêng và các API lớn hơn trong context dài hạn là backlog.
+JWT memory-only (reload cần login lại) và frontend là lựa chọn dự kiến, chưa chạy.
+
 ## CURRENTLY IMPLEMENTED
 
 - One Java 21 Spring Boot application with Maven Wrapper.
+- Plain Java Identity `User`, `EmailAddress`, `Role` and their unit tests; no login yet.
 - PostgreSQL/PostGIS infrastructure, Flyway extension migration and JPA configuration.
 - Spring Security technical-endpoint policy, Actuator health and empty OpenAPI/Swagger.
 - ArchUnit boundary rules and real PostGIS/HTTP integration tests using Testcontainers.
@@ -195,7 +204,7 @@ See the [architecture overview](docs/architecture/architecture-overview.md),
 Domain is framework-independent; application depends inward; infrastructure implements
 ports; controllers handle HTTP and invoke use cases. No module may access another
 module's infrastructure or internal implementation. Published cross-module contracts
-will be designed with actual use cases. ArchUnit rules tolerate currently absent
+are specified in P00 for implementation with their owning use cases. ArchUnit rules tolerate currently absent
 business classes and automatically check future additions; semantic design needs review.
 
 The bootstrap scope is foundation only. Later Phase 1 work covers domain slices and
@@ -205,5 +214,5 @@ external brokers, separate databases per module and production cloud infrastruct
 Phase 2 may consider selected improvements only after benchmarks identify a concrete
 quality-attribute problem, with an ADR and comparable measurements.
 
-Next development stage: **domain analysis and the first vertical business slice,
-likely Identity & Access**. That stage has not been implemented here.
+Next development stage after P00 review/merge: **P01 Identity & Access and SPA foundation**.
+That stage has not been implemented here; P00 does not start P01.

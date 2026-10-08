@@ -6,12 +6,21 @@ Global Disaster Response Network is a university simulation of disaster response
 coordination. It is not an operational emergency response system. The repository
 currently provides the development foundation only: one Java 21 Spring Boot
 application, database infrastructure, technical endpoints, tests, Docker and CI.
-No business model, CRUD endpoint, authentication flow, or business schema exists.
+Plain Java Identity `User`, `EmailAddress`, `Role` and their unit tests also exist.
+No business CRUD endpoint, authentication flow, business schema or frontend exists.
 
 `GDRN_CODEX_PROJECT_CONTEXT.md` is preserved as the long-term project context. Its
 JWT, API examples, proposed tables and completed Phase 1 rubric describe future
-work. The bootstrap request narrows the current scope and uses ADR 004 for planned
-internal events; a JWT decision is deferred until Identity requirements are analyzed.
+work. The [three-week MVP plan](../KE_HOACH_PHA_1_3_TUAN.md) narrows implementation to
+Identity/Disaster/Reporting/Rescue and six basic SPA screens. Resource/Alert, separate
+RescueRequest, Geo risk, and the larger context API list remain product backlog.
+[P00 HTTP/OpenAPI](../api/phase1-contract.md) defines exactly 15 planned operations;
+[module contracts and migration ledger](phase1-module-contracts.md) define the future
+Rescue → Reporting → Disaster dependency. No Java contracts are implemented yet.
+[ADR 005](../adr/005-phase1-mvp-auth-frontend.md) proposes JWT memory-only (reload needs
+login), no refresh and CITIZEN/AUTHORITY with React/TypeScript/Vite. ADR 004 remains a
+future event proposal, not an MVP event bus. See [progress](../phase1-progress.md)
+and [P00 handoff](../handoffs/P00.md) for review and implementation gates.
 
 ## Architecture and deployment
 
@@ -27,8 +36,9 @@ flowchart LR
     Backend --> DB[(PostgreSQL + PostGIS)]
 ```
 
-Only the main application and shared technical configuration currently exist.
-Future modules below are reserved by documentation, without placeholder classes.
+The main application, shared technical configuration, initial Identity domain and
+module package-info files currently exist. The responsibilities below include the
+long-term backlog; only the four MVP modules are scheduled for business implementation.
 
 | Package under `com.gdrn` | Planned responsibility |
 | --- | --- |

@@ -1,5 +1,22 @@
 # GDRN — Codex Project Context & Engineering Specification
 
+> **Scope note P00 — 08/10/2026:** Phần bên dưới giữ nguyên bối cảnh dài hạn/backlog,
+> không phải danh sách đã implemented. Scope thực thi hiện tại theo
+> [kế hoạch MVP 4 người / 3 tuần](docs/KE_HOACH_PHA_1_3_TUAN.md),
+> [15 API + 6 UI/OpenAPI](docs/api/phase1-contract.md),
+> [published contracts và migration ledger](docs/architecture/phase1-module-contracts.md),
+> [ADR 005](docs/adr/005-phase1-mvp-auth-frontend.md) và
+> [tiến độ](docs/phase1-progress.md). Kế hoạch này thay thế đề xuất phân công, lịch một
+> tháng, API/lifecycle và scope mở rộng bên dưới cho MVP. Chỉ Identity, Disaster,
+> Reporting, Rescue và SPA cơ bản; Geo bán kính nằm trong Reporting adapter.
+> Register, Resource/Alert, RescueRequest riêng, risk/priority, map, events và các API
+> ngoài E01–E15 là backlog. Không coi backlog sản phẩm mặc định là Phase 2 kiến trúc.
+> JWT memory-only, no refresh, chỉ CITIZEN/AUTHORITY, reload cần login lại là thiết kế
+> dự kiến. RESPONDER/ADMIN vẫn giữ trong domain enum/tests, chưa dùng ở MVP.
+> Hiện có bootstrap + User/EmailAddress/Role/tests, chưa API nghiệp vụ/auth/frontend.
+> ADR 004 thực tế là đề xuất internal events; ADR 005 mới là MVP/auth/frontend.
+> Các số ADR/API mẫu bên dưới mang tính lịch sử, không cấp lại số đã dùng.
+
 > **Project:** Global Disaster Response Network (GDRN)  
 > **Tên tiếng Việt:** Hệ thống Điều phối và Ứng phó Thảm họa Toàn cầu  
 > **Course:** Kiến trúc phần mềm  
