@@ -4,8 +4,9 @@ Tài liệu dành cho thành viên mới cài dự án trên máy cá nhân. Ch�
 tại thư mục gốc repo, nơi có `pom.xml` và `docker-compose.yml`.
 
 **Trạng thái hiện tại:** dự án có backend Spring Boot, PostgreSQL/PostGIS, Flyway,
-Swagger và health check. Chưa có frontend, đăng nhập, API hay dữ liệu nghiệp vụ.
-Mở Swagger để kiểm tra backend; không có trang chủ web tại `/`.
+Swagger và health check; P01 đã có login/me, credential persistence và frontend login.
+Đọc [P01: JWT/demo env, Node và frontend](P01_LOCAL.md) trước khi chạy backend.
+Frontend ở cổng 5173, backend không phục vụ trang HTML `/login`.
 
 ## Chạy nhanh bằng PowerShell
 
@@ -16,12 +17,16 @@ Sau khi cài Docker Desktop và bật Linux containers, tại thư mục repo:
 .\scripts\dev.ps1 up
 ```
 
-`init` chỉ tạo `.env` nếu thiếu, sinh một mật khẩu local ngẫu nhiên dùng chung cho
-database và host backend; không in mật khẩu hoặc ghi đè file cũ. Nếu đã có volume
+`init` chỉ tạo `.env` nếu thiếu, sinh mật khẩu local ngẫu nhiên dùng chung cho
+database và host backend cùng JWT key base64 riêng; không in secret hoặc ghi đè
+file cũ. Với `.env` trước P01 thiếu JWT key, chạy `scripts/local.ps1 -Action setup`
+để điền cấu hình thiếu và demo accounts, giữ các giá trị đã cấu hình. Nếu đã có volume
 database từ lần chạy trước, điền credentials gốc của volume vào `.env` trước `up`.
 Thay password trong `.env` không đổi password của database đã khởi tạo.
 `up` cũng gọi `init` khi cần, build image, chờ cả hai container healthy và kiểm tra
 HTTP thật. Khi thành công, script in đường dẫn Swagger đúng theo port đang publish.
+`dev.ps1` quản lý backend/database. Để chạy thêm SPA login, dùng `local.ps1 -Action start`
+theo [hướng dẫn P01](P01_LOCAL.md); chưa có frontend production container.
 
 | Lệnh | Kết quả |
 | --- | --- |
@@ -99,7 +104,8 @@ cp .env.example .env
 ```
 
 Mở `.env` bằng trình soạn thảo. Thay hai giá trị `replace-with-a-local-password`
-bằng cùng một mật khẩu riêng cho môi trường local:
+bằng cùng một mật khẩu riêng cho môi trường local; đồng thời cấu hình JWT key và
+demo credentials theo [P01 setup](P01_LOCAL.md):
 
 - `POSTGRES_PASSWORD`: mật khẩu khởi tạo database trong Docker.
 - `DB_PASSWORD`: mật khẩu backend chạy trên máy dùng để kết nối database.
@@ -162,8 +168,8 @@ Với cổng mặc định, mở:
 | OpenAPI JSON | http://localhost:8080/v3/api-docs |
 
 Nếu đã đặt `APP_PORT=18080`, thay `8080` bằng `18080` trong các URL trên.
-Health check phải trả về `{"status":"UP"}`. Swagger chưa có API nghiệp vụ là đúng
-với giai đoạn bootstrap hiện tại. Các đường dẫn khác có thể trả về HTTP 403.
+Health check phải trả về `{"status":"UP"}`. Swagger có đúng E01 login/E02 me.
+Các API tương lai vẫn bị deny; thiếu token 401, role/route không được phép 403.
 
 Xem log nếu khởi động lỗi:
 
@@ -247,8 +253,8 @@ SELECT version, description, success FROM flyway_schema_history;
 ```
 
 Gõ `\q` để thoát. Flyway history chỉ xuất hiện sau khi backend đã khởi động và chạy
-migration. Hiện chỉ có migration bật PostGIS, các đối tượng extension và metadata
-của Flyway; chưa có bảng/dữ liệu nghiệp vụ hay tài khoản đăng nhập ứng dụng.
+migration. V1 bật PostGIS, V2 tạo identity_users và identity_credentials. Chỉ profile
+`demo` với đủ env mới tạo ba tài khoản; không có dữ liệu mẫu/mật khẩu trong SQL.
 
 ## 7. Chạy kiểm thử
 
@@ -347,11 +353,11 @@ Tránh để IDE và Maven cùng biên dịch vào `target`: tạm dừng automa
 rồi chạy lại `clean verify` nếu IDE ghi đè class bằng compilation-error stubs.
 Không bỏ qua test để che lỗi.
 
-### Swagger trống, trang `/` hoặc `/login` trả 403
+### Trang `/login` trên cổng backend trả lỗi
 
-Đây là trạng thái dự kiến hiện tại: chỉ cho phép các technical GET endpoints ở bước 4.
-Chưa có frontend, login/JWT hoặc API nghiệp vụ. Dùng `/actuator/health` để kiểm tra
-backend thay vì chờ có trang đăng nhập.
+P01 chạy frontend dev ở cổng 5173, gọi backend qua Vite proxy. Mở
+`http://127.0.0.1:5173/login`; không dùng cổng backend cho HTML. Nếu Swagger không có
+E01/E02, kiểm tra đang chạy đúng build P01. Xem [P01 setup](P01_LOCAL.md).
 
 ## 10. Kiểm tra đã cài thành công
 

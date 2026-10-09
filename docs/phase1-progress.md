@@ -1,19 +1,21 @@
 # Tiến độ Pha 1
 
-Cập nhật 08/10/2026; task table khởi tạo TODO, chỉ P00 chuyển DONE sau khi đối chiếu
-contracts và chạy validation. **DONE P00 là hoàn tất tài liệu**, không phải nhóm đã
-review/merge hay 15 APIs/6 screens đã implemented. ADR 005 còn Proposed.
+Cập nhật 08/10/2026; task table khởi tạo TODO, P00 và P01 đã hoàn tất phạm vi task.
+**DONE không đồng nghĩa đã review/merge** hay toàn bộ 15 APIs/6 screens đã implemented.
+P01 chỉ có E01/E02/S01; các task sau vẫn TODO. ADR 005 ghi rõ phần đã triển khai.
 Xem [P00 handoff](handoffs/P00.md) và [kế hoạch/dependencies](PROMPTS_PHA_1_4_NGUOI.md).
 
 **Bổ sung 09/10/2026 — F00 nền tảng chạy được:** hoàn tất readiness/liveness,
 script local, Compose smoke và full verification trên nhánh `feat/runnable-foundation`.
 Xem [handoff F00](handoffs/F00.md) và [prompt chia commit](PROMPT_NEN_MONG.md).
-F00 là công việc kỹ thuật trước MVP, không chuyển P01 hoặc các task nghiệp vụ sang DONE.
+F00 là công việc kỹ thuật trước MVP. Nhánh này đã tích hợp main tại `e4b449b`
+(PR #1 chứa P01); giữ cả E01/E02/S01 và readiness/smoke. Xem kết quả kiểm tra
+tích hợp trong handoff F00; không chuyển các task nghiệp vụ tiếp theo sang DONE.
 
 | Task | Owner | Prerequisite đã merge | Trạng thái | Evidence / phần còn lại |
 | --- | --- | --- | --- | --- |
 | P00 | 1; cả nhóm review | Repo nền | DONE | OpenAPI + module contracts + ADR 005; validation trong handoff; chờ review/merge |
-| P01 | 1 | P00 | TODO | Identity/auth/SPA nền; chưa bắt đầu |
+| P01 | 1 | P00 | DONE | [Handoff](handoffs/P01.md): E01/E02/S01; đã merge main qua PR #1 (`e4b449b`); kiểm tra tích hợp F00: 30 backend + 10 frontend tests pass |
 | B1 | 2 | P01 | TODO | Report tạo/xem/ownership; migration chờ Disaster |
 | C1 | 3 | P01 | TODO | Disaster backend + S05 |
 | B2 | 2 | B1, C1 | TODO | Verify/withdraw/spatial, ReportingQuery |

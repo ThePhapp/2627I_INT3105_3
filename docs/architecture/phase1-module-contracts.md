@@ -140,7 +140,7 @@ nhánh riêng, không dùng ngày/owner prefix để lách thứ tự.
 | Slot merge | Module / owner | Task | Version | Nội dung dự kiến / trạng thái |
 | --- | --- | --- | --- | --- |
 | Đã có | Technical / 1 | Bootstrap | V1__enable_postgis.sql | Chỉ extension PostGIS; giữ nguyên |
-| 1 | Identity / 1 | P01 | CHƯA CẤP | User/credential sau domain analysis; không demo password trong SQL |
+| 1 | Identity / 1 | P01 | V2__identity_accounts.sql | Cấp bởi owner tích hợp P01 trên nền 0e19c36 (chỉ có V1); identity_users + identity_credentials, không seed; thay đổi đang chờ review/merge |
 | 2 | Disaster / 3 | C1 | CHƯA CẤP | Disaster theo lifecycle/optimistic version |
 | 3 | Reporting / 2 | B1, B2 | CHƯA CẤP | Report/soft-delete/spatial và phần B2 phát sinh |
 | 4 | Rescue / 4 | D1 | CHƯA CẤP | Team/mission/unique constraints sau B2 |
@@ -158,6 +158,12 @@ Không bật `out-of-order`, không sửa/rename/xóa migration đã merge hoặ
 (kể cả nhánh local đã chạy); sửa bằng migration mới. Không repair checksum để né lỗi.
 Nếu migration nháp có vấn đề về thứ tự, phối hợp Người 1 trước khi merge; không drop
 DB/volume đang dùng. P00 không cấp version mới và không tạo migration business.
+
+P01 cập nhật ledger: User giữ id/email/role; credential hash là concern application/
+infrastructure, không nằm trong User. ORM maps hai entity riêng, credential có FK nội
+Identity tới user; email unique. V2 kế tiếp V1, chưa có PR/commit P01 vì chưa commit/
+merge trong phiên. C1 phải cập nhật nhánh tích hợp và nhận số tiếp theo lúc sẵn sàng,
+không tự lấy V3 trước review. [P01 handoff](../handoffs/P01.md) ghi validation.
 
 Demo data được mô tả trong [HTTP contract](../api/phase1-contract.md#dữ-liệu-mẫu-và-json)
 chỉ để chuẩn bị. P01/D1 dùng controlled demo profile idempotent, credential từ env;

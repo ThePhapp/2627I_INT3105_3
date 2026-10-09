@@ -21,6 +21,21 @@ public final class User {
         return new User(id, emailAddress, Role.CITIZEN);
     }
 
+    public static User reconstitute(UUID id, EmailAddress emailAddress, Role role) {
+        return new User(id, emailAddress, role);
+    }
+
+    public static User provision(UUID id, EmailAddress emailAddress, Role role) {
+        if (role != Role.CITIZEN && role != Role.AUTHORITY) {
+            throw new IllegalArgumentException("Only citizen and authority can be provisioned in MVP");
+        }
+        return new User(id, emailAddress, role);
+    }
+
+    public boolean canSignIn() {
+        return role == Role.CITIZEN || role == Role.AUTHORITY;
+    }
+
     public UUID id() {
         return id;
     }

@@ -1,6 +1,10 @@
 # Prompt làm nền móng chạy được, chia việc và commit
 
 Ngày 09/10/2026. Đây là lát cắt nhỏ trước MVP, dùng lại bootstrap hiện có.
+Sau khi tích hợp `origin/main` tại `e4b449b`, P01 (Identity/JWT/S01) đã có trong code.
+Prompt F01–F04 bên dưới ghi scope lịch sử của F00, không phải yêu cầu xóa P01.
+Khi chạy tiếp phải đọc trạng thái thật và bỏ qua phần đã hoàn tất; init hiện sinh
+cả DB password và JWT key để backend P01 khởi động được.
 Không thay thế [16 task Pha 1](PROMPTS_PHA_1_4_NGUOI.md) hoặc mở rộng 15 API/6 UI.
 “Module” ở đây là module nghiệp vụ và phần việc nhỏ; không phải Maven submodule
 hay microservice. Một ứng dụng Spring Boot tiếp tục chứa các module `com.gdrn`.

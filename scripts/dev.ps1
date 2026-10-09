@@ -55,11 +55,14 @@ function Initialize-Environment {
         $bytes = New-Object byte[] 32
         $random.GetBytes($bytes)
         $password = [BitConverter]::ToString($bytes).Replace('-', '').ToLowerInvariant()
+        $random.GetBytes($bytes)
+        $jwtKey = [Convert]::ToBase64String($bytes)
     } finally {
         $random.Dispose()
     }
     $template = [IO.File]::ReadAllText((Join-Path $repositoryRoot '.env.example'))
     $contents = $template.Replace('replace-with-a-local-password', $password)
+    $contents = $contents.Replace('replace-with-random-base64-key', $jwtKey)
     # CreateNew also prevents overwriting a file created concurrently.
     $stream = [IO.File]::Open($environmentFile, [IO.FileMode]::CreateNew, [IO.FileAccess]::Write)
     try {
@@ -68,7 +71,7 @@ function Initialize-Environment {
     } finally {
         $stream.Dispose()
     }
-    Write-Host 'Created ignored .env with a random local password. No secret is printed.'
+    Write-Host 'Created ignored .env with a random local password and JWT key. No secret is printed.'
     Write-Host 'For an existing database volume, configure its original credentials before up.'
 }
 
