@@ -4,11 +4,12 @@
 
 Global Disaster Response Network is a university simulation of disaster response
 coordination. It is not an operational emergency response system. The repository
-currently provides the foundation and P01 Identity/login slice: one Java 21 Spring Boot
+currently provides the foundation plus P01 Identity/login and C1 Disaster slices: one Java 21 Spring Boot
 application, database infrastructure, technical endpoints, tests, Docker and CI.
 Plain Java Identity `User`, `EmailAddress`, `Role` and their unit tests also exist.
-P01 adds login/me, user/credential persistence and the login SPA. Other business
-APIs/screens remain unimplemented; see [handoff P01](../handoffs/P01.md).
+P01 adds login/me, user/credential persistence and the login SPA. C1 adds the Disaster
+lifecycle, E03–E06, V3 persistence, published query contract and S05. Reporting and
+Rescue remain unimplemented; see [handoff C1](../handoffs/C1.md).
 
 B1 update (2026-10-09): Reporting E07/E08/E09 domain, application and adapters now
 exist, with PostGIS tests. They remain inaccessible under production security until
@@ -19,12 +20,13 @@ request snapshot semantics and deployment gates. No Reporting UI or B2 commands 
 
 `GDRN_CODEX_PROJECT_CONTEXT.md` is preserved as the long-term project context. Its
 JWT, API examples, proposed tables and completed Phase 1 rubric describe future
-work. The [three-week MVP plan](../KE_HOACH_PHA_1_3_TUAN.md) narrows implementation to
+work. The [three-week MVP plan](../PROMPTS_PHA_1_4_NGUOI.md) narrows implementation to
 Identity/Disaster/Reporting/Rescue and six basic SPA screens. Resource/Alert, separate
 RescueRequest, Geo risk, and the larger context API list remain product backlog.
 [P00 HTTP/OpenAPI](../api/phase1-contract.md) defines exactly 15 planned operations;
 [module contracts and migration ledger](phase1-module-contracts.md) define the future
-Rescue → Reporting → Disaster dependency. No Java contracts are implemented yet.
+Rescue → Reporting → Disaster dependency. DisasterQuery is implemented by C1;
+ReportingQuery remains scheduled for B2.
 [ADR 005](../adr/005-phase1-mvp-auth-frontend.md) proposes JWT memory-only (reload needs
 login), no refresh and CITIZEN/AUTHORITY with React/TypeScript/Vite. ADR 004 remains a
 future event proposal, not an MVP event bus. See [progress](../phase1-progress.md)
@@ -44,8 +46,8 @@ flowchart LR
     Backend --> DB[(PostgreSQL + PostGIS)]
 ```
 
-The main application, shared technical configuration, Identity domain/application/
-adapters, login SPA and module package-info files currently exist. The responsibilities below include the
+The main application, shared technical configuration, Identity and Disaster slices,
+login SPA, S05 and remaining module package-info files currently exist. The responsibilities below include the
 long-term backlog; only the four MVP modules are scheduled for business implementation.
 
 | Package under `com.gdrn` | Planned responsibility |
@@ -120,7 +122,8 @@ Use one PostgreSQL 16/PostGIS 3.5 database with Flyway owning schema evolution.
 Hibernate validates schema; it never creates/updates it. Open Session in View is off.
 `V1__enable_postgis.sql` enables the extension only. P01 V2 creates identity_users
 and identity_credentials with an internal FK; demo data comes from a controlled
-profile, never migration SQL. Domain User contains no password/hash or JPA annotation. PostGIS itself supplies extension
+profile, never migration SQL. C1 V3 creates `disasters` with lifecycle, coordinate,
+enum and version constraints plus list indexes. Domain models contain no JPA annotations. PostGIS itself supplies extension
 objects and Flyway supplies its history table; neither is a business schema.
 The local PostGIS image may pre-enable the extension, so the migration is idempotent.
 The local database owner can install extensions; future restricted deployments
@@ -133,15 +136,21 @@ PostGIS today without an unused ORM spatial dependency.
 
 ## Technical HTTP and security foundation
 
+Liveness checks application availability; readiness also checks database connectivity.
+The Docker healthcheck uses `/actuator/health/readiness`; see [ADR 006](../adr/006-foundation-readiness.md).
+Only the aggregate health and exact liveness/readiness paths are public; direct
+component health paths are denied.
+
 Actuator exposes health only, with details hidden. GET access to health, OpenAPI
 and Swagger assets is public for development. P01 allows POST /api/auth/login and
-GET /api/auth/me for CITIZEN/AUTHORITY; every other route is denied. Spring Security
+GET /api/auth/me for CITIZEN/AUTHORITY. C1 adds Disaster reads for both roles and
+Disaster POST/PATCH for AUTHORITY; other unimplemented routes remain denied. Spring Security
 Resource Server/Nimbus verifies HS256/issuer/audience/time/required claims; key is
 environment-only. No generated user, Basic/form/cookie auth, registration or refresh.
 CSRF ignores /api/** for Bearer-only auth; other paths retain protection. Session
 creation is stateless and request caching is off. JSON errors and no-store headers
-are consistent. Swagger exposes only E01/E02 via a checked-in implemented contract
-slice; future modules must extend it as their real controllers merge.
+are consistent. Swagger exposes E01–E06 via checked-in Identity and Disaster contract
+slices; future modules must extend them as their real controllers merge.
 
 API extracts UUID and role from verified Jwt into plain application arguments;
 IdentityService uses account/password/token ports, JPA/BCrypt/Nimbus are outer
@@ -150,28 +159,32 @@ ON CONFLICT DO NOTHING preserves existing account data on concurrent reruns.
 
 React/TypeScript/Vite S01 confirms login with E02. JWT is memory-only, reload requires
 login, logout/401/expiry clear session and per-user state. Feature route exports
-register only implemented pages. P01 remains on S01 with real account information
-until S03/S04 exist; no fake report/operations pages. See [P01 setup](../P01_LOCAL.md).
+register only implemented pages. S05 exports `/operations/disasters` for AUTHORITY
+with real E03–E06 list/detail/create/edit/resolve flows. See [P01 setup](../P01_LOCAL.md).
 
 ## Testing and CI
 
 `mvnw test` runs domain/application/configuration tests and ArchUnit through Surefire without Docker. `mvnw verify` also runs
 Failsafe's `GdrnApplicationIT` using an isolated PostGIS Testcontainer and a real HTTP
 server. It verifies application startup, Flyway history, PostGIS spatial behavior,
-public technical endpoints and denied requests. Missing Docker fails integration
+public technical endpoints and denied requests, readiness refusal and a real
+database outage/recovery while liveness stays UP. Missing Docker fails integration
 tests; nothing is silently skipped. Test datasource values come from the container,
 not `.env`. JUnit 5 and Mockito arrive through Spring Boot Test.
 
 Future domain tests use plain Java; application tests mock ports; persistence and
 important API/security tests use Testcontainers. CI on pushes and pull requests
-sets up Java 21, runs clean verify, validates Compose and builds the Docker image.
+sets up Java 21, runs clean verify, validates Compose, builds and starts the Docker
+stack and smoke-tests health, both probes, OpenAPI and Swagger before cleanup.
+`scripts/dev.ps1` provides the same local lifecycle, retains database volumes on
+shutdown and never overwrites an existing `.env`.
 Docker image assembly skips executing tests because Testcontainers requires a
 Docker daemon; the preceding CI verify is the test gate.
 
 ## Phase 1 and Phase 2
 
-Disaster/Reporting/Rescue slices, the expanded A1 security audit and benchmark
-workloads are planned later in Phase 1; P01 authentication is implemented.
+Reporting/Rescue slices, the expanded A1 security audit and benchmark workloads are
+planned later in Phase 1; P01 authentication and C1 Disaster are implemented.
 Internal events may be introduced in-process; delivery, transaction timing and
 failure semantics are not decided or implemented. Examples such as
 `IncidentReportSubmitted`, `DisasterDetected`, `DisasterEscalated`, `RescueRequested`,

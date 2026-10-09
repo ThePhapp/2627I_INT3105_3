@@ -8,6 +8,43 @@ Swagger và health check; P01 đã có login/me, credential persistence và fron
 Đọc [P01: JWT/demo env, Node và frontend](P01_LOCAL.md) trước khi chạy backend.
 Frontend ở cổng 5173, backend không phục vụ trang HTML `/login`.
 
+## Chạy nhanh bằng PowerShell
+
+Sau khi cài Docker Desktop và bật Linux containers, tại thư mục repo:
+
+```powershell
+.\scripts\dev.ps1 init
+.\scripts\dev.ps1 up
+```
+
+`init` chỉ tạo `.env` nếu thiếu, sinh mật khẩu local ngẫu nhiên dùng chung cho
+database và host backend cùng JWT key base64 riêng; không in secret hoặc ghi đè
+file cũ. Với `.env` trước P01 thiếu JWT key, chạy `scripts/local.ps1 -Action setup`
+để điền cấu hình thiếu và demo accounts, giữ các giá trị đã cấu hình. Nếu đã có volume
+database từ lần chạy trước, điền credentials gốc của volume vào `.env` trước `up`.
+Thay password trong `.env` không đổi password của database đã khởi tạo.
+`up` cũng gọi `init` khi cần, build image, chờ cả hai container healthy và kiểm tra
+HTTP thật. Khi thành công, script in đường dẫn Swagger đúng theo port đang publish.
+`dev.ps1` quản lý backend/database. Để chạy thêm SPA login, dùng `local.ps1 -Action start`
+theo [hướng dẫn P01](P01_LOCAL.md); chưa có frontend production container.
+
+| Lệnh | Kết quả |
+| --- | --- |
+| `.\scripts\dev.ps1 status` | Trạng thái và port container |
+| `.\scripts\dev.ps1 smoke` | Kiểm tra health, liveness, readiness, OpenAPI, Swagger |
+| `.\scripts\dev.ps1 smoke -BaseUrl http://localhost:8081` | Kiểm tra backend chạy host hoặc port riêng |
+| `.\scripts\dev.ps1 verify` | `mvnw.cmd clean verify`, cần JDK 21 và Docker |
+| `.\scripts\dev.ps1 down` | Dừng/xóa container, giữ named volume và `.env` |
+
+Script dùng được trên Windows PowerShell 5.1 và PowerShell 7. Có thể gọi bằng đường
+dẫn tuyệt đối từ bất kỳ thư mục nào. Nếu chính sách máy chặn script, dùng quy trình
+thủ công bên dưới theo chính sách của máy. Script không tự thay execution policy.
+Docker/server/native command lỗi sẽ trả exit code 1; không coi container vừa chạy
+là ứng dụng đã sẵn sàng. Health không lộ chi tiết kết nối database.
+
+Task phát triển chỉ lấy từ [kế hoạch duy nhất](PROMPTS_PHA_1_4_NGUOI.md).
+[Handoff nền tảng](handoffs/F00.md) lưu kết quả lịch sử, không phải prompt giao việc.
+
 ## 1. Chuẩn bị công cụ
 
 | Công cụ | Chạy toàn bộ bằng Docker | Chạy backend trực tiếp trên máy |

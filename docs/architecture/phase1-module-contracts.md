@@ -1,12 +1,8 @@
 # Pha 1 — published contracts và migration ledger
 
-**P00 design, chưa có Java contract/persistence nghiệp vụ.**
-
-B1 update 09/10/2026: published Java contracts vẫn chưa có (ReportingQuery thuộc
-B2). Reporting có adapters tạo/đọc PENDING và [SQL nháp](../handoffs/b1/reporting-schema.sql),
-đã test trên PostGIS nhưng **chưa có migration được cấp/chưa triển khai runtime**.
-Ledger order bên dưới giữ nguyên; [handoff B1](../handoffs/B1.md) gửi yêu cầu tới Người 1.
-Theo [kế hoạch](../KE_HOACH_PHA_1_3_TUAN.md), [HTTP/UI contract](../api/phase1-contract.md)
+**Contracts P00; trạng thái main 7be3b09:** Identity V2 và Disaster V3 đã có;
+DisasterQuery đã triển khai trong C1. ReportingQuery thuộc B2, chưa có trên main.
+Theo [kế hoạch](../PROMPTS_PHA_1_4_NGUOI.md), [HTTP/UI contract](../api/phase1-contract.md)
 và [ADR 005](../adr/005-phase1-mvp-auth-frontend.md).
 
 ## Chiều phụ thuộc và owner
@@ -145,9 +141,9 @@ nhánh riêng, không dùng ngày/owner prefix để lách thứ tự.
 | Slot merge | Module / owner | Task | Version | Nội dung dự kiến / trạng thái |
 | --- | --- | --- | --- | --- |
 | Đã có | Technical / 1 | Bootstrap | V1__enable_postgis.sql | Chỉ extension PostGIS; giữ nguyên |
-| 1 | Identity / 1 | P01 | V2__identity_accounts.sql | Cấp bởi owner tích hợp P01 trên nền 0e19c36 (chỉ có V1); identity_users + identity_credentials, không seed; thay đổi đang chờ review/merge |
-| 2 | Disaster / 3 | C1 | CHƯA CẤP | Disaster theo lifecycle/optimistic version |
-| 3 | Reporting / 2 | B1, B2 | CHƯA CẤP | B1 đã có SQL nháp geography/PENDING, chờ C1 merge và Người 1 cấp số; B2 bổ sung verification/soft-delete/spatial bằng migration mới |
+| 1 | Identity / 1 | P01 | V2__identity_accounts.sql | Đã merge qua e4b449b; identity_users + identity_credentials, không seed |
+| 2 | Disaster / 3 | C1 | V3__disasters.sql | Disaster lifecycle, expected-version atomic update; cấp sau khi xác nhận main chỉ có V1/V2 |
+| 3 | Reporting / 2 | B1, B2 | CHƯA CẤP | Report/soft-delete/spatial và phần B2 phát sinh |
 | 4 | Rescue / 4 | D1 | CHƯA CẤP | Team/mission/unique constraints sau B2 |
 
 B1 domain/application có thể làm song song C1 sau P01, nhưng persistence migration
@@ -166,9 +162,9 @@ DB/volume đang dùng. P00 không cấp version mới và không tạo migration
 
 P01 cập nhật ledger: User giữ id/email/role; credential hash là concern application/
 infrastructure, không nằm trong User. ORM maps hai entity riêng, credential có FK nội
-Identity tới user; email unique. V2 kế tiếp V1, chưa có PR/commit P01 vì chưa commit/
-merge trong phiên. C1 phải cập nhật nhánh tích hợp và nhận số tiếp theo lúc sẵn sàng,
-không tự lấy V3 trước review. [P01 handoff](../handoffs/P01.md) ghi validation.
+Identity tới user; email unique. V2 kế tiếp V1, đã merge qua e4b449b. V3 Disaster
+đã có trên main tại 3220765; Reporting vẫn phải được Người 1 cấp số sau khi review
+history/nhánh tích hợp, không tự cấp. [P01 handoff](../handoffs/P01.md) ghi validation lịch sử.
 
 Demo data được mô tả trong [HTTP contract](../api/phase1-contract.md#dữ-liệu-mẫu-và-json)
 chỉ để chuẩn bị. P01/D1 dùng controlled demo profile idempotent, credential từ env;

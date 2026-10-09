@@ -1,16 +1,22 @@
 # Tiến độ Pha 1
 
-Cập nhật 09/10/2026; P01 đã merge tại e4b449b, B1 adapters đã có nhưng chờ tích hợp.
+Cập nhật 09/10/2026 theo main `7be3b09`. Đây là bảng trạng thái, không phải kế hoạch riêng.
 **DONE không đồng nghĩa đã review/merge** hay toàn bộ 15 APIs/6 screens đã implemented.
-Runtime hiện chỉ có E01/E02/S01. B1 chưa DONE vì migration/policy chưa được tích hợp.
+Main có P01 và code C1; chưa có handoff C1 để kết luận đầy đủ acceptance.
 Xem [P00 handoff](handoffs/P00.md) và [kế hoạch/dependencies](PROMPTS_PHA_1_4_NGUOI.md).
+
+**Bổ sung 09/10/2026 — F00 nền tảng chạy được:** hoàn tất readiness/liveness,
+script local, Compose smoke và full verification trên nhánh `feat/runnable-foundation`.
+Xem [handoff F00](handoffs/F00.md) để tra lịch sử kiểm chứng. Nền tảng đã merge qua
+`853a532`; các nhãn F00–F04 không phải task mới trong kế hoạch. Chỉ dùng 16 task ở
+[kế hoạch duy nhất](PROMPTS_PHA_1_4_NGUOI.md) để giao việc tiếp.
 
 | Task | Owner | Prerequisite đã merge | Trạng thái | Evidence / phần còn lại |
 | --- | --- | --- | --- | --- |
-| P00 | 1; cả nhóm review | Repo nền | DONE | OpenAPI + module contracts + ADR 005; validation trong handoff; chờ review/merge |
-| P01 | 1 | P00 | DONE | [Handoff](handoffs/P01.md): E01/E02/S01; đã merge vào main qua e4b449b |
-| B1 | 2 | P01 (e4b449b) | BLOCKED INTEGRATION | [Handoff](handoffs/B1.md): adapters E07–E09 + PostGIS/tests đã có; 47 backend/10 frontend tests pass; chờ C1, cấp migration và Người 1 mở route policy; chưa runnable B1 local |
-| C1 | 3 | P01 | TODO | Disaster backend + S05 |
+| P00 | 1; cả nhóm review | Repo nền | DONE | OpenAPI + module contracts + ADR 005; đã có trên main tại 0e19c36 |
+| P01 | 1 | P00 | DONE | [Handoff](handoffs/P01.md): E01/E02/S01; đã merge main qua PR #1 (`e4b449b`); kiểm tra tích hợp F00: 30 backend + 10 frontend tests pass |
+| B1 | 2 | P01 | CHƯA TÍCH HỢP | Main chưa có Reporting; nhánh feat/b1-reports có commit 5ff284a, cần review/tích hợp theo task B1 và ledger |
+| C1 | 3 | P01 | CHỜ NGHIỆM THU | Main có domain/use cases (6fccbe4), persistence/V3 (3220765), E03–E06 (bc8dfec), S05 (7be3b09); còn handoff C1 và đối chiếu acceptance/UI thật |
 | B2 | 2 | B1, C1 | TODO | Verify/withdraw/spatial, ReportingQuery |
 | D1 | 4 | B2, C1 | TODO | Rescue backend/DB race protection |
 | B3 | 2 | B1; B2/D1 để hoàn tất | TODO | S02/S03 |

@@ -1,35 +1,30 @@
 package com.gdrn;
 
-import java.time.Instant;
-import java.util.Base64;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Locale;
-import java.util.Map;
-import java.util.Set;
-import java.util.UUID;
-
-import static org.assertj.core.api.Assertions.assertThat;
+import java.time.Duration;
+import org.springframework.boot.availability.AvailabilityChangeEvent;
+import org.springframework.boot.availability.ReadinessState;
+import org.springframework.context.ConfigurableApplicationContext;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.DefaultApplicationArguments;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.client.TestRestTemplate;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.*;
+import org.springframework.security.oauth2.jwt.*;
+import org.springframework.security.oauth2.jose.jws.MacAlgorithm;
+import com.gdrn.identity.application.port.AccountStore;
+import com.gdrn.identity.domain.*;
+import com.gdrn.identity.infrastructure.configuration.DemoAccountBootstrap;
+import com.gdrn.disaster.application.*;
+import com.gdrn.disaster.application.contract.*;
+import com.gdrn.disaster.application.port.DisasterRepository;
+import com.gdrn.disaster.domain.*;
+import org.springframework.boot.DefaultApplicationArguments;
 import org.springframework.core.env.ConfigurableEnvironment;
 import org.springframework.core.env.MapPropertySource;
-import org.springframework.http.HttpEntity;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpMethod;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
+import java.time.Instant;
+import java.util.*;
 import org.springframework.jdbc.core.JdbcTemplate;
-import org.springframework.security.oauth2.jose.jws.MacAlgorithm;
-import org.springframework.security.oauth2.jwt.JwsHeader;
-import org.springframework.security.oauth2.jwt.JwtClaimsSet;
-import org.springframework.security.oauth2.jwt.JwtEncoder;
-import org.springframework.security.oauth2.jwt.JwtEncoderParameters;
-import org.springframework.security.oauth2.jwt.NimbusJwtEncoder;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
@@ -39,15 +34,17 @@ import org.testcontainers.junit.jupiter.Testcontainers;
 import org.testcontainers.utility.DockerImageName;
 
 import com.fasterxml.jackson.databind.JsonNode;
-import com.gdrn.identity.application.port.AccountStore;
-import com.gdrn.identity.domain.EmailAddress;
-import com.gdrn.identity.domain.Role;
-import com.gdrn.identity.domain.User;
-import com.gdrn.identity.infrastructure.configuration.DemoAccountBootstrap;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.awaitility.Awaitility.await;
 
 @Testcontainers
 @ActiveProfiles({"test", "demo"})
-@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
+@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT, properties = {
+        "spring.datasource.hikari.connection-timeout=1000",
+        "spring.datasource.hikari.validation-timeout=500",
+        "spring.datasource.hikari.data-source-properties.socketTimeout=2"
+})
 class GdrnApplicationIT {
     static final String SECRET = randomKey();
     static final String PASSWORD = UUID.randomUUID().toString();
@@ -83,6 +80,9 @@ class GdrnApplicationIT {
     @Autowired AccountStore accounts;
     @Autowired DemoAccountBootstrap bootstrap;
     @Autowired ConfigurableEnvironment environment;
+    @Autowired ConfigurableApplicationContext context;
+    @Autowired DisasterRepository disasters;
+    @Autowired DisasterQuery disasterQuery;
 
     @Test
     void context_starts_with_flyway_and_postgis() {
@@ -90,6 +90,7 @@ class GdrnApplicationIT {
         assertThat(jdbc.queryForObject("SELECT count(*) FROM flyway_schema_history WHERE version = '1' AND success",
                 Integer.class)).isEqualTo(1);
         assertThat(jdbc.queryForObject("SELECT count(*) FROM flyway_schema_history WHERE version = '2' AND success", Integer.class)).isEqualTo(1);
+        assertThat(jdbc.queryForObject("SELECT count(*) FROM flyway_schema_history WHERE version = '3' AND success", Integer.class)).isEqualTo(1);
         assertThat(jdbc.queryForObject("SELECT ST_Distance(ST_Point(0, 0), ST_Point(3, 4))",
                 Double.class)).isEqualTo(5.0);
     }
@@ -102,27 +103,105 @@ class GdrnApplicationIT {
         assertThat(response.getBody().has("components")).isFalse();
     }
 
-    @Test void migrationUpgradesV1WithoutProvisioningAnyAccounts() {
+    @Test void migrationUpgradesV2ToV3WithoutProvisioningAccountsOrDisasters() {
         var base = org.flywaydb.core.Flyway.configure().dataSource(DATABASE.getJdbcUrl(), DATABASE.getUsername(), DATABASE.getPassword())
-                .schemas("identity_upgrade_check").target("1").load();
+                .schemas("disaster_upgrade_check").target("2").load();
         base.migrate();
         var upgrade = org.flywaydb.core.Flyway.configure().dataSource(DATABASE.getJdbcUrl(), DATABASE.getUsername(), DATABASE.getPassword())
-                .schemas("identity_upgrade_check").load();
+                .schemas("disaster_upgrade_check").load();
         assertThat(upgrade.migrate().migrationsExecuted).isEqualTo(1);
-        assertThat(jdbc.queryForObject("select count(*) from identity_upgrade_check.identity_users", Integer.class)).isZero();
-        assertThat(jdbc.queryForObject("select count(*) from identity_upgrade_check.identity_credentials", Integer.class)).isZero();
+        assertThat(jdbc.queryForObject("select count(*) from disaster_upgrade_check.identity_users", Integer.class)).isZero();
+        assertThat(jdbc.queryForObject("select count(*) from disaster_upgrade_check.identity_credentials", Integer.class)).isZero();
+        assertThat(jdbc.queryForObject("select count(*) from disaster_upgrade_check.disasters", Integer.class)).isZero();
+    }
+
+    @Test void disasterAdapterPersistsFiltersPagesPublishesAndRejectsStaleUpdate() {
+        Instant now = Instant.parse("2026-10-09T02:00:00Z");
+        UUID activeId = UUID.randomUUID();
+        UUID resolvedId = UUID.randomUUID();
+        disasters.add(Disaster.create(activeId, "Active flood", DisasterType.FLOOD, Severity.HIGH,
+                "Training active", 21.028, 105.834, now));
+        var resolved = Disaster.create(resolvedId, "Resolved fire", DisasterType.WILDFIRE, Severity.MODERATE,
+                "Training resolved", 10, 106, now.plusSeconds(1)).update(0,
+                new Disaster.Change(Optional.empty(), Optional.empty(), Optional.empty(), Optional.empty(),
+                        Optional.empty(), Optional.empty(), Optional.of(DisasterStatus.RESOLVED)), now.plusSeconds(2));
+        disasters.add(resolved);
+
+        var page = disasters.search(new DisasterSearch(0, 1, DisasterSearch.Sort.CREATED_AT_DESC,
+                Optional.empty(), Optional.empty()));
+        assertThat(page.items()).extracting(Disaster::id).containsExactly(resolvedId);
+        assertThat(page.totalElements()).isEqualTo(2);
+        assertThat(page.totalPages()).isEqualTo(2);
+        assertThat(disasters.search(new DisasterSearch(0, 20, DisasterSearch.Sort.CREATED_AT_ASC,
+                Optional.of(DisasterStatus.ACTIVE), Optional.of(DisasterType.FLOOD))).items())
+                .extracting(Disaster::id).containsExactly(activeId);
+        assertThat(disasterQuery.findByIds(Set.of(activeId, resolvedId, UUID.randomUUID())))
+                .containsOnlyKeys(activeId, resolvedId);
+        assertThat(disasterQuery.findById(resolvedId).orElseThrow().status()).isEqualTo(DisasterState.RESOLVED);
+
+        var current = disasters.findById(activeId).orElseThrow();
+        var changed = current.update(0, new Disaster.Change(Optional.of("Updated flood"), Optional.empty(),
+                Optional.empty(), Optional.empty(), Optional.empty(), Optional.empty(), Optional.empty()), now.plusSeconds(3));
+        assertThat(disasters.update(changed, 0)).isTrue();
+        assertThat(disasters.update(changed, 0)).isFalse();
+        assertThat(disasters.findById(activeId).orElseThrow().name()).isEqualTo("Updated flood");
     }
 
     @Test
-    void openapi_and_swagger_publish_exactly_the_implemented_identity_slice() {
+    void probes_are_public_and_hide_components() {
+        assertProbe("liveness", HttpStatus.OK, "UP");
+        assertProbe("readiness", HttpStatus.OK, "UP");
+    }
+
+    @Test
+    void refusing_traffic_changes_readiness_without_changing_liveness() {
+        try {
+            AvailabilityChangeEvent.publish(context, ReadinessState.REFUSING_TRAFFIC);
+            assertProbe("readiness", HttpStatus.SERVICE_UNAVAILABLE, "OUT_OF_SERVICE");
+            assertProbe("liveness", HttpStatus.OK, "UP");
+        } finally {
+            AvailabilityChangeEvent.publish(context, ReadinessState.ACCEPTING_TRAFFIC);
+        }
+        assertProbe("readiness", HttpStatus.OK, "UP");
+    }
+
+    @Test
+    void database_outage_fails_readiness_but_does_not_fail_liveness() {
+        // Pause only this test's disposable container, never the developer's Compose DB.
+        var docker = DATABASE.getDockerClient();
+        docker.pauseContainerCmd(DATABASE.getContainerId()).exec();
+        try {
+            assertProbe("readiness", HttpStatus.SERVICE_UNAVAILABLE, "DOWN");
+            assertProbe("liveness", HttpStatus.OK, "UP");
+        } finally {
+            docker.unpauseContainerCmd(DATABASE.getContainerId()).exec();
+        }
+        await().atMost(Duration.ofSeconds(20)).untilAsserted(
+                () -> assertProbe("readiness", HttpStatus.OK, "UP"));
+    }
+
+    private void assertProbe(String probe, HttpStatus status, String health) {
+        var response = http.getForEntity("/actuator/health/" + probe, JsonNode.class);
+        assertThat(response.getStatusCode()).isEqualTo(status);
+        assertThat(response.getBody().path("status").asText()).isEqualTo(health);
+        assertThat(response.getBody().has("components")).isFalse();
+        assertThat(response.getBody().has("details")).isFalse();
+    }
+
+    @Test
+    void openapi_and_swagger_publish_exactly_the_implemented_identity_and_disaster_slices() {
         var response = http.getForEntity("/v3/api-docs", JsonNode.class);
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
         assertThat(response.getBody().path("info").path("title").asText())
                 .isEqualTo("Global Disaster Response Network API");
         assertThat(response.getBody().path("info").path("version").asText()).isEqualTo("Phase 1");
-        assertThat(response.getBody().path("paths").size()).isEqualTo(2);
+        assertThat(response.getBody().path("paths").size()).isEqualTo(4);
         assertThat(response.getBody().at("/paths/~1api~1auth~1login/post/operationId").asText()).isEqualTo("E01");
         assertThat(response.getBody().at("/paths/~1api~1auth~1me/get/operationId").asText()).isEqualTo("E02");
+        assertThat(response.getBody().at("/paths/~1api~1disasters/get/operationId").asText()).isEqualTo("E03");
+        assertThat(response.getBody().at("/paths/~1api~1disasters~1{id}/get/operationId").asText()).isEqualTo("E04");
+        assertThat(response.getBody().at("/paths/~1api~1disasters/post/operationId").asText()).isEqualTo("E05");
+        assertThat(response.getBody().at("/paths/~1api~1disasters~1{id}/patch/operationId").asText()).isEqualTo("E06");
         assertThat(response.getBody().at("/components/securitySchemes/bearerAuth/scheme").asText()).isEqualTo("bearer");
         assertThat(response.getBody().at("/paths/~1api~1auth~1me/get/security/0/bearerAuth").isArray()).isTrue();
         var swagger = http.getForEntity("/swagger-ui/index.html", String.class);
@@ -138,11 +217,92 @@ class GdrnApplicationIT {
                 .isEqualTo(HttpStatus.UNAUTHORIZED);
         assertThat(http.postForEntity("/actuator/health", null, String.class).getStatusCode())
                 .isEqualTo(HttpStatus.FORBIDDEN);
+        assertThat(http.getForEntity("/actuator/health/db", String.class).getStatusCode())
+                .isEqualTo(HttpStatus.UNAUTHORIZED);
+        assertThat(http.postForEntity("/actuator/health/readiness", null, String.class).getStatusCode())
+                .isEqualTo(HttpStatus.FORBIDDEN);
         String token = login("one@example.test").path("accessToken").asText();
-        for (String path : List.of("/api/reports", "/api/disasters", "/api/rescue-missions", "/api/auth/register", "/api/auth/refresh", "/api/auth/logout")) {
+        assertError(call(HttpMethod.GET, "/actuator/health/db", null, token), 403, "FORBIDDEN");
+        for (String path : List.of("/api/reports", "/api/rescue-missions", "/api/auth/register", "/api/auth/refresh", "/api/auth/logout")) {
             assertError(call(HttpMethod.GET, path, null, token), 403, "FORBIDDEN");
             assertError(call(HttpMethod.POST, path, "{}", token), 403, "FORBIDDEN");
         }
+    }
+
+    @Test void disasterApisEnforceRolesExpectedVersionAndLifecycle() {
+        String citizen = login("one@example.test").path("accessToken").asText();
+        String authority = login("ops@example.test").path("accessToken").asText();
+        assertError(call(HttpMethod.GET, "/api/disasters", null, null), 401, "UNAUTHENTICATED");
+        assertThat(call(HttpMethod.GET, "/api/disasters", null, citizen).getStatusCode().value()).isEqualTo(200);
+
+        String create = """
+                {"name":"  C1 flood exercise  ","type":"FLOOD","severity":"HIGH",
+                 "description":"  Water is rising  ","latitude":21.028,"longitude":105.834}
+                """;
+        assertError(call(HttpMethod.POST, "/api/disasters", create, citizen), 403, "FORBIDDEN");
+        assertError(call(HttpMethod.PATCH, "/api/disasters/00000000-0000-4000-8000-000000000004",
+                "{\"expectedVersion\":0,\"status\":\"RESOLVED\"}", citizen), 403, "FORBIDDEN");
+
+        var created = call(HttpMethod.POST, "/api/disasters", create, authority);
+        assertThat(created.getStatusCode().value()).isEqualTo(201);
+        assertThat(created.getHeaders().getCacheControl()).isEqualTo("no-store");
+        assertThat(created.getBody().path("name").asText()).isEqualTo("C1 flood exercise");
+        assertThat(created.getBody().path("status").asText()).isEqualTo("ACTIVE");
+        assertThat(created.getBody().path("version").asLong()).isZero();
+        String path = "/api/disasters/" + created.getBody().path("id").asText();
+        assertThat(call(HttpMethod.GET, path, null, citizen).getBody()).isEqualTo(created.getBody());
+        assertThat(call(HttpMethod.GET, path, null, authority).getStatusCode().value()).isEqualTo(200);
+
+        var edited = call(HttpMethod.PATCH, path,
+                "{\"expectedVersion\":0,\"severity\":\"CRITICAL\"}", authority);
+        assertThat(edited.getStatusCode().value()).isEqualTo(200);
+        assertThat(edited.getBody().path("version").asLong()).isEqualTo(1);
+        assertThat(edited.getBody().path("severity").asText()).isEqualTo("CRITICAL");
+        assertError(call(HttpMethod.PATCH, path,
+                "{\"expectedVersion\":0,\"name\":\"Stale\"}", authority), 409, "STALE_VERSION");
+
+        var resolved = call(HttpMethod.PATCH, path,
+                "{\"expectedVersion\":1,\"status\":\"RESOLVED\"}", authority);
+        assertThat(resolved.getStatusCode().value()).isEqualTo(200);
+        assertThat(resolved.getBody().path("status").asText()).isEqualTo("RESOLVED");
+        assertError(call(HttpMethod.PATCH, path,
+                "{\"expectedVersion\":2,\"name\":\"Cannot change\"}", authority), 409, "INVALID_TRANSITION");
+    }
+
+    @Test void disasterApisValidateShapeReferencesFiltersAndSort() {
+        String authority = login("ops@example.test").path("accessToken").asText();
+        for (String body : List.of("{}", "null", "[]", "{", "{\"name\":null}",
+                "{\"name\":\"x\",\"type\":\"flood\",\"severity\":\"HIGH\",\"description\":\"x\",\"latitude\":0,\"longitude\":0}",
+                "{\"name\":\"x\",\"type\":\"FLOOD\",\"severity\":\"HIGH\",\"description\":\"x\",\"latitude\":91,\"longitude\":0}",
+                "{\"name\":\"x\",\"type\":\"FLOOD\",\"severity\":\"HIGH\",\"description\":\"x\",\"latitude\":0,\"longitude\":0,\"extra\":true}")) {
+            assertError(call(HttpMethod.POST, "/api/disasters", body, authority), 400, "VALIDATION_ERROR");
+        }
+        var textHeaders = new HttpHeaders(); textHeaders.setContentType(MediaType.TEXT_PLAIN); textHeaders.setBearerAuth(authority);
+        assertError(http.exchange("/api/disasters", HttpMethod.POST, new HttpEntity<>("data", textHeaders), JsonNode.class),
+                415, "UNSUPPORTED_MEDIA_TYPE");
+        for (String path : List.of("/api/disasters?page=-1", "/api/disasters?size=101",
+                "/api/disasters?sort=name,asc", "/api/disasters?status=active", "/api/disasters?unknown=1",
+                "/api/disasters?page=0&page=1")) {
+            assertError(call(HttpMethod.GET, path, null, authority), 400, "VALIDATION_ERROR");
+        }
+        assertError(call(HttpMethod.GET, "/api/disasters/NOT-A-UUID", null, authority), 400, "VALIDATION_ERROR");
+        assertError(call(HttpMethod.GET, "/api/disasters/00000000-0000-4000-8000-000000000099", null, authority),
+                404, "NOT_FOUND");
+        for (String body : List.of("{}", "null", "[]", "{\"expectedVersion\":0}",
+                "{\"expectedVersion\":null,\"name\":\"x\"}",
+                "{\"expectedVersion\":0,\"status\":\"ACTIVE\"}",
+                "{\"expectedVersion\":0,\"name\":null}")) {
+            var response = call(HttpMethod.PATCH, "/api/disasters/00000000-0000-4000-8000-000000000099", body, authority);
+            if (body.contains("\"status\":\"ACTIVE\"")) assertError(response, 404, "NOT_FOUND");
+            else assertError(response, 400, "VALIDATION_ERROR");
+        }
+        var filtered = call(HttpMethod.GET,
+                "/api/disasters?page=0&size=100&sort=createdAt,asc&status=ACTIVE&type=FLOOD", null, authority);
+        assertThat(filtered.getStatusCode().value()).isEqualTo(200);
+        assertThat(filtered.getBody().path("items")).allSatisfy(item -> {
+            assertThat(item.path("status").asText()).isEqualTo("ACTIVE");
+            assertThat(item.path("type").asText()).isEqualTo("FLOOD");
+        });
     }
 
     @Test void loginAndMeUseRealCredentialsForBothRolesWithoutLeakingHashOrPassword() {

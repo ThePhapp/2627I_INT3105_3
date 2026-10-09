@@ -19,8 +19,14 @@ jobs:
         run: bash ./mvnw --batch-mode --no-transfer-progress clean verify
       - name: Validate Compose
         run: docker compose --env-file .env.example config --quiet
-      - name: Build runtime image
-        run: docker build -t gdrn:ci .
+      - name: Build and smoke-test the running foundation
+        shell: pwsh
+        run: ./scripts/dev.ps1 up
+      - name: Stop the foundation (retain database volume)
+        if: always()
+        shell: pwsh
+        run: |
+          if (Test-Path .env) { ./scripts/dev.ps1 down }
   frontend:
     runs-on: ubuntu-latest
     timeout-minutes: 10

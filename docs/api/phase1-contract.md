@@ -1,20 +1,17 @@
 # Hợp đồng HTTP/UI Pha 1 — P00
 
-P01 status: E01/E02 đã implemented, S01 dùng API thật; các operation/screen còn lại
-vẫn planned. YAML dưới đây giữ baseline đích P00, không đại diện runtime Swagger.
-Runtime chỉ công bố slice Identity; xem [handoff P01](../handoffs/P01.md).
+Runtime status: P01 E01/E02/S01 và C1 E03–E06/S05 đã implemented; các operation/screen
+còn lại vẫn planned. YAML dưới đây giữ baseline đích P00. Runtime Swagger chỉ công
+bố các slice đã triển khai; xem [handoff P01](../handoffs/P01.md) và
+[handoff C1](../handoffs/C1.md).
 
-B1 update 09/10/2026: E07–E09 adapters có tests, nhưng chưa tích hợp migration và
-central route policy. [B1 adapter OpenAPI](b1-adapter-contract.json) mô tả chính xác
-phần đã viết; **không phải runtime Swagger đã mở**. E08 radius vẫn B2, hiện nhận
-lat/lon/radiusMeters sẽ bị 400 trong adapter. Xem [handoff B1](../handoffs/B1.md).
-
-Ngày chốt thiết kế: 08/10/2026. **Planned, chưa implemented.** Chuẩn máy đọc là
+Ngày chốt thiết kế: 08/10/2026. Đây là baseline đích; trạng thái runtime được ghi ở
+đầu tài liệu và theo handoff từng task. Chuẩn máy đọc là
 [OpenAPI 3.0.3](phase1-contract.yaml); quy tắc có điều kiện dưới đây cũng là yêu cầu
 bắt buộc. Nếu cần đổi, cập nhật cả YAML, tài liệu và handoff, để producer/consumer
 review trước khi merge. Không tự đổi tên trường để ghép UI.
 
-Nguồn scope: [kế hoạch](../KE_HOACH_PHA_1_3_TUAN.md),
+Nguồn scope: [kế hoạch](../PROMPTS_PHA_1_4_NGUOI.md),
 [quy tắc chung](../PROMPTS_PHA_1_4_NGUOI.md#quy-tắc-chung-áp-dụng-cho-mọi-prompt),
 [contracts module và sổ migration](../architecture/phase1-module-contracts.md),
 [ADR 005](../adr/005-phase1-mvp-auth-frontend.md).

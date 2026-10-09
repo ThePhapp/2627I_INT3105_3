@@ -12,17 +12,24 @@ import java.io.IOException;
 @Configuration(proxyBeanMethods = false)
 public class OpenApiConfiguration {
     @Bean
-    OpenApiCustomizer identityContract() throws IOException {
-        // Only the implemented slice is shipped, never advertise the other 13 planned operations.
-        OpenAPI contract;
-        try (var input = new ClassPathResource("openapi/identity.json").getInputStream()) {
-            contract = Json.mapper().readValue(input, OpenAPI.class);
-        }
+    OpenApiCustomizer implementedContracts() throws IOException {
+        // Only implemented slices are shipped; never advertise planned operations.
+        OpenAPI identity = read("openapi/identity.json");
+        OpenAPI disaster = read("openapi/disaster.json");
         return api -> {
-            contract.getPaths().forEach(api::path);
-            contract.getComponents().getSchemas().forEach(api.getComponents()::addSchemas);
-            contract.getComponents().getSecuritySchemes().forEach(api.getComponents()::addSecuritySchemes);
+            for (OpenAPI contract : java.util.List.of(identity, disaster)) {
+                contract.getPaths().forEach(api::path);
+                contract.getComponents().getSchemas().forEach(api.getComponents()::addSchemas);
+                if (contract.getComponents().getSecuritySchemes() != null) {
+                    contract.getComponents().getSecuritySchemes().forEach(api.getComponents()::addSecuritySchemes);
+                }
+            }
         };
+    }
+    private static OpenAPI read(String path) throws IOException {
+        try (var input = new ClassPathResource(path).getInputStream()) {
+            return Json.mapper().readValue(input, OpenAPI.class);
+        }
     }
     @Bean
     OpenAPI openApi() {
