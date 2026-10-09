@@ -14,5 +14,5 @@ COPY --from=build --chown=gdrn:gdrn /workspace/target/gdrn-*.jar app.jar
 USER gdrn
 EXPOSE 8080
 HEALTHCHECK --interval=10s --timeout=5s --start-period=60s --retries=6 \
-    CMD curl --fail --silent http://localhost:8080/actuator/health || exit 1
+    CMD curl --fail --silent http://localhost:8080/actuator/health/readiness || exit 1
 ENTRYPOINT ["java", "-jar", "app.jar"]

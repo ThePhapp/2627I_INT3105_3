@@ -123,7 +123,11 @@ PostGIS today without an unused ORM spatial dependency.
 
 ## Technical HTTP and security foundation
 
-Actuator exposes health only, with details hidden. GET access to health, OpenAPI
+Actuator exposes health only, with details hidden. Liveness checks application
+availability; readiness also checks database connectivity. The Docker healthcheck
+uses `/actuator/health/readiness`; see [ADR 006](../adr/006-foundation-readiness.md).
+Only the aggregate health and the exact liveness/readiness paths are public;
+direct component health paths are denied. GET access to these probes, OpenAPI
 and Swagger assets is public for development. Every other request is denied.
 Security uses no generated user, login, registration, roles, tokens or fake identity.
 CSRF protection remains enabled; there are no permitted write endpoints. Request
@@ -135,7 +139,8 @@ policy with real requirements. Swagger metadata exists with no business operatio
 `mvnw test` runs ArchUnit through Surefire without Docker. `mvnw verify` also runs
 Failsafe's `GdrnApplicationIT` using an isolated PostGIS Testcontainer and a real HTTP
 server. It verifies application startup, Flyway history, PostGIS spatial behavior,
-public technical endpoints and denied requests. Missing Docker fails integration
+public technical endpoints and denied requests, readiness refusal and a real
+database outage/recovery while liveness stays UP. Missing Docker fails integration
 tests; nothing is silently skipped. Test datasource values come from the container,
 not `.env`. JUnit 5 and Mockito arrive through Spring Boot Test.
 

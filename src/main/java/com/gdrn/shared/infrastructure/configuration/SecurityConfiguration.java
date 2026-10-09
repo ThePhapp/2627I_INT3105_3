@@ -13,7 +13,8 @@ public class SecurityConfiguration {
     SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         return http
                 .authorizeHttpRequests(authorize -> authorize
-                        .requestMatchers(HttpMethod.GET, "/actuator/health", "/actuator/health/**",
+                        .requestMatchers(HttpMethod.GET, "/actuator/health",
+                                "/actuator/health/liveness", "/actuator/health/readiness",
                                 "/v3/api-docs", "/v3/api-docs/**", "/swagger-ui.html", "/swagger-ui/**")
                         .permitAll()
                         .anyRequest().denyAll())
