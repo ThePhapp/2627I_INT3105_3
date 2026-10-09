@@ -16,8 +16,9 @@ public class OpenApiConfiguration {
         // Only implemented slices are shipped; never advertise planned operations.
         OpenAPI identity = read("openapi/identity.json");
         OpenAPI disaster = read("openapi/disaster.json");
+        OpenAPI reporting = read("openapi/reporting.json");
         return api -> {
-            for (OpenAPI contract : java.util.List.of(identity, disaster)) {
+            for (OpenAPI contract : java.util.List.of(identity, disaster, reporting)) {
                 contract.getPaths().forEach(api::path);
                 contract.getComponents().getSchemas().forEach(api.getComponents()::addSchemas);
                 if (contract.getComponents().getSecuritySchemes() != null) {

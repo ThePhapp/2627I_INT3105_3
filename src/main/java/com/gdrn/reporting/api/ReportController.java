@@ -6,7 +6,8 @@ import com.gdrn.reporting.application.ReportService;
 import com.gdrn.reporting.domain.Coordinates;
 import com.gdrn.reporting.domain.InvalidReport;
 import com.gdrn.reporting.domain.ReportType;
-import io.swagger.v3.oas.annotations.Hidden;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.Operation;
 import jakarta.servlet.http.HttpServletRequest;
 import java.util.List;
@@ -22,9 +23,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-// Do not advertise inaccessible endpoints until the integration owner installs schema + route policy.
-// See docs/handoffs/B1.md; remove Hidden in the same integration patch.
-@Hidden
+@SecurityRequirement(name = "bearerAuth")
 @RestController
 @RequestMapping(value = "/api/reports", produces = "application/json")
 public class ReportController {
@@ -34,7 +33,7 @@ public class ReportController {
 
     @PostMapping(consumes = "application/json")
     @Operation(operationId = "E07", summary = "Submit a report")
-    public ResponseEntity<ReportResponse> submit(@AuthenticationPrincipal Jwt principal,
+    public ResponseEntity<ReportResponse> submit(@Parameter(hidden = true) @AuthenticationPrincipal Jwt principal,
                                                 @RequestBody CreateReportRequest body, HttpServletRequest request) {
         var actor = actor(principal);
         actor.requireCitizen();
@@ -48,7 +47,7 @@ public class ReportController {
 
     @GetMapping
     @Operation(operationId = "E08", summary = "List visible reports (spatial filters pending B2)")
-    public ResponseEntity<PageResponse> list(@AuthenticationPrincipal Jwt principal, HttpServletRequest request) {
+    public ResponseEntity<PageResponse> list(@Parameter(hidden = true) @AuthenticationPrincipal Jwt principal, HttpServletRequest request) {
         var actor = actor(principal);
         var page = reports.list(actor, ReportRequestParser.filter(request));
         return ResponseEntity.ok().cacheControl(CacheControl.noStore()).body(new PageResponse(
@@ -58,7 +57,7 @@ public class ReportController {
 
     @GetMapping("/{id}")
     @Operation(operationId = "E09", summary = "Read a visible report")
-    public ResponseEntity<ReportResponse> detail(@AuthenticationPrincipal Jwt principal, @PathVariable String id,
+    public ResponseEntity<ReportResponse> detail(@Parameter(hidden = true) @AuthenticationPrincipal Jwt principal, @PathVariable String id,
                                                 HttpServletRequest request) {
         var actor = actor(principal);
         ReportRequestParser.noQuery(request);

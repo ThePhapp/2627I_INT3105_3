@@ -6,6 +6,7 @@ import com.gdrn.disaster.domain.Disaster;
 import jakarta.persistence.EntityManager;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.annotation.Isolation;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -32,7 +33,8 @@ public class JpaDisasterRepository implements DisasterRepository {
                 .collect(Collectors.toUnmodifiableMap(Disaster::id, disaster -> disaster));
     }
 
-    @Override public DisasterPage search(DisasterSearch search) {
+    @Override @Transactional(readOnly = true, isolation = Isolation.REPEATABLE_READ)
+    public DisasterPage search(DisasterSearch search) {
         StringBuilder where = new StringBuilder(" where 1=1");
         if (search.status().isPresent()) where.append(" and d.status = :status");
         if (search.type().isPresent()) where.append(" and d.type = :type");

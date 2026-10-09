@@ -1,9 +1,10 @@
 # Hợp đồng HTTP/UI Pha 1 — P00
 
-Runtime status: P01 E01/E02/S01 và C1 E03–E06/S05 đã implemented; các operation/screen
-còn lại vẫn planned. YAML dưới đây giữ baseline đích P00. Runtime Swagger chỉ công
-bố các slice đã triển khai; xem [handoff P01](../handoffs/P01.md) và
-[handoff C1](../handoffs/C1.md).
+Runtime tích hợp: P01 E01/E02/S01, C1 E03–E06/S05, B1 E07–E09 đã có.
+E08 hiện có page/size/sort/status/type/disasterId; radius thuộc B2 và bị 400 nếu gửi
+lat/lon/radiusMeters lúc này. YAML giữ baseline đích 15 operations; runtime chỉ công
+bố E01–E09. Xem [B1](../handoffs/B1.md), [C1](../handoffs/C1.md) và
+[kết quả tích hợp](../handoffs/B1-C1-integration.md). S02/S03 và E10–E15 chưa có.
 
 Ngày chốt thiết kế: 08/10/2026. Đây là baseline đích; trạng thái runtime được ghi ở
 đầu tài liệu và theo handoff từng task. Chuẩn máy đọc là

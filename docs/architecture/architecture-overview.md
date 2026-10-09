@@ -8,15 +8,15 @@ currently provides the foundation plus P01 Identity/login and C1 Disaster slices
 application, database infrastructure, technical endpoints, tests, Docker and CI.
 Plain Java Identity `User`, `EmailAddress`, `Role` and their unit tests also exist.
 P01 adds login/me, user/credential persistence and the login SPA. C1 adds the Disaster
-lifecycle, E03–E06, V3 persistence, published query contract and S05. Reporting and
-Rescue remain unimplemented; see [handoff C1](../handoffs/C1.md).
+lifecycle, E03–E06, V3 persistence, published query contract and S05. Rescue remains unimplemented; see [handoff C1](../handoffs/C1.md).
 
-B1 update (2026-10-09): Reporting E07/E08/E09 domain, application and adapters now
-exist, with PostGIS tests. They remain inaccessible under production security until
-C1 and an allocated Reporting migration are integrated by the integration owner.
-Swagger still publishes only E01/E02. See [B1 handoff](../handoffs/B1.md) and
-[ADR 006](../adr/006-reporting-postgis-data-mapper.md) for the JDBC data mapper,
-request snapshot semantics and deployment gates. No Reporting UI or B2 commands exist.
+B1/C1 integration (2026-10-09): E07–E09 now run with centralized JWT security and
+Flyway V4 after Disaster V3. Reporting stores WGS84 geography through an explicit
+JDBC data mapper. Citizen ownership is checked in the application and SQL predicates;
+report detail never queries Rescue. E03/E08 list count/items share a REPEATABLE READ
+snapshot. Swagger publishes E01–E09; S01/S05 exist, Reporting UI and B2 commands do not.
+See [B1 handoff](../handoffs/B1.md), [integration results](../handoffs/B1-C1-integration.md)
+and [ADR 007](../adr/007-reporting-postgis-data-mapper.md).
 
 `GDRN_CODEX_PROJECT_CONTEXT.md` is preserved as the long-term project context. Its
 JWT, API examples, proposed tables and completed Phase 1 rubric describe future
@@ -144,12 +144,12 @@ component health paths are denied.
 Actuator exposes health only, with details hidden. GET access to health, OpenAPI
 and Swagger assets is public for development. P01 allows POST /api/auth/login and
 GET /api/auth/me for CITIZEN/AUTHORITY. C1 adds Disaster reads for both roles and
-Disaster POST/PATCH for AUTHORITY; other unimplemented routes remain denied. Spring Security
+Disaster POST/PATCH for AUTHORITY; Reporting POST is CITIZEN-only and GET is CITIZEN/AUTHORITY with application ownership; other unimplemented routes remain denied. Spring Security
 Resource Server/Nimbus verifies HS256/issuer/audience/time/required claims; key is
 environment-only. No generated user, Basic/form/cookie auth, registration or refresh.
 CSRF ignores /api/** for Bearer-only auth; other paths retain protection. Session
 creation is stateless and request caching is off. JSON errors and no-store headers
-are consistent. Swagger exposes E01–E06 via checked-in Identity and Disaster contract
+are consistent. Swagger exposes E01–E09 via checked-in Identity, Disaster and Reporting contract
 slices; future modules must extend them as their real controllers merge.
 
 API extracts UUID and role from verified Jwt into plain application arguments;

@@ -1,5 +1,12 @@
 # GDRN — Codex Project Context & Engineering Specification
 
+> **Tích hợp B1/C1 — 09/10/2026:** E01–E09 và S01/S05 đã có, Flyway V1–V4.
+> Reporting ownership/PostGIS dùng policy production; radius/verify/withdraw thuộc B2,
+> S02/S03 thuộc B3, Rescue vẫn chưa triển khai. Chỉ giao task theo
+> [kế hoạch duy nhất](docs/PROMPTS_PHA_1_4_NGUOI.md); xem
+> [kết quả tích hợp](docs/handoffs/B1-C1-integration.md) cho kiểm chứng hiện tại.
+
+
 > **P01 update — 08/10/2026:** E01/E02/S01 đã triển khai trên nhánh P01: JWT thật,
 > user/credential persistence, demo profile và SPA login. Các đoạn P00 bên dưới là
 > trạng thái lịch sử tại P00; phần dài hạn vẫn backlog. Xem

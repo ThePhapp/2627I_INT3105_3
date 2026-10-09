@@ -1,9 +1,8 @@
-# ADR 006: Reporting PostGIS data mapper
+# ADR 007: Reporting PostGIS data mapper
 
 ## Status
 
-Implemented in B1 adapters; deployment blocked pending C1, allocated Reporting migration
-and the integration owner's route policy. This does not authorize a migration version.
+Implemented during B1/C1 integration. V4 follows C1 V3; centralized security exposes E07–E09.
 
 ## Context
 
@@ -35,10 +34,9 @@ before insert so creation and subsequent reads agree with PostgreSQL precision.
 
 ## Consequences
 
-The SQL draft is under `docs/handoffs/b1/`, outside production Flyway locations. Tests
-apply that exact draft only to disposable PostGIS after actual V1/V2 migrations.
-This checks mapping/schema feasibility, not a completed Flyway upgrade from C1.
-Production routes stay denied and Swagger excludes this slice until integration.
+Flyway V4 creates the Reporting schema after V3 Disaster. Tests run production
+migrations and centralized JWT security; upgrade V3→V4 preserves existing rows.
+Runtime OpenAPI publishes the implemented Reporting slice, excluding B2 spatial filters.
 
 B2 must extend the domain reconstitution/DTO mapper for VERIFIED/REJECTED, allocate
 a new migration for state/verification/withdrawal data and replace the PENDING-only

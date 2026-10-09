@@ -1,6 +1,4 @@
--- B1 schema proposal, NOT an allocated Flyway migration.
--- Integration owner assigns V<n> only AFTER C1 has merged and ledger/history are reviewed.
--- Tests execute this exact proposal in disposable Testcontainers, never the local database.
+-- Allocated during B1/C1 integration after V3 Disaster; no business seed.
 CREATE TABLE reporting_reports (
     id UUID PRIMARY KEY,
     reporter_id UUID NOT NULL,

@@ -1,8 +1,8 @@
 # Tiến độ Pha 1
 
-Cập nhật 09/10/2026 theo main `7be3b09`. Đây là bảng trạng thái, không phải kế hoạch riêng.
+Cập nhật 09/10/2026 sau tích hợp B1/C1. Đây là bảng trạng thái, không phải kế hoạch riêng.
 **DONE không đồng nghĩa đã review/merge** hay toàn bộ 15 APIs/6 screens đã implemented.
-Main có P01 và code C1; chưa có handoff C1 để kết luận đầy đủ acceptance.
+Runtime có E01–E09 và S01/S05, Flyway V1–V4; xem [kết quả tích hợp](handoffs/B1-C1-integration.md).
 Xem [P00 handoff](handoffs/P00.md) và [kế hoạch/dependencies](PROMPTS_PHA_1_4_NGUOI.md).
 
 **Bổ sung 09/10/2026 — F00 nền tảng chạy được:** hoàn tất readiness/liveness,
@@ -15,8 +15,8 @@ Xem [handoff F00](handoffs/F00.md) để tra lịch sử kiểm chứng. Nền t
 | --- | --- | --- | --- | --- |
 | P00 | 1; cả nhóm review | Repo nền | DONE | OpenAPI + module contracts + ADR 005; đã có trên main tại 0e19c36 |
 | P01 | 1 | P00 | DONE | [Handoff](handoffs/P01.md): E01/E02/S01; đã merge main qua PR #1 (`e4b449b`); kiểm tra tích hợp F00: 30 backend + 10 frontend tests pass |
-| B1 | 2 | P01 | CHƯA TÍCH HỢP | Main chưa có Reporting; nhánh feat/b1-reports có commit 5ff284a, cần review/tích hợp theo task B1 và ledger |
-| C1 | 3 | P01 | CHỜ NGHIỆM THU | Main có domain/use cases (6fccbe4), persistence/V3 (3220765), E03–E06 (bc8dfec), S05 (7be3b09); còn handoff C1 và đối chiếu acceptance/UI thật |
+| B1 | 2 | P01; C1 migration trước B1 | DONE | [Handoff](handoffs/B1.md): E07–E09, V4, security production, ownership/PostGIS/upgrade/snapshot tests; local smoke pass; radius/verify/delete thuộc B2 |
+| C1 | 3 | P01 | DONE | [Handoff](handoffs/C1.md): E03–E06/S05, V3, DisasterQuery; integration retest 62 backend +15 frontend +4 browser tests pass; list snapshot đã sửa theo P00 |
 | B2 | 2 | B1, C1 | TODO | Verify/withdraw/spatial, ReportingQuery |
 | D1 | 4 | B2, C1 | TODO | Rescue backend/DB race protection |
 | B3 | 2 | B1; B2/D1 để hoàn tất | TODO | S02/S03 |

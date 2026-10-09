@@ -43,6 +43,7 @@ Xem [start/stop và database local](docs/P01_LOCAL.md#chạy-local-lâu-dài-tr�
 MVP ba tuần giới hạn Identity/Disaster/Reporting/Rescue và SPA cơ bản. Resource/Alert,
 Geo risk, RescueRequest riêng và các API lớn hơn trong context dài hạn là backlog.
 **P01 implemented:** E01/E02, JWT memory-only, demo accounts và S01 login thật.
+**B1 implemented:** E07–E09, ownership, PostGIS geography và V4; xem [handoff B1](docs/handoffs/B1.md).
 **C1 implemented:** E03–E06, DisasterQuery, migration V3 và S05 tại
 `/operations/disasters`. Xem [cách chạy P01](docs/P01_LOCAL.md),
 [handoff P01](docs/handoffs/P01.md) và [handoff C1](docs/handoffs/C1.md).
@@ -52,7 +53,7 @@ Geo risk, RescueRequest riêng và các API lớn hơn trong context dài hạn 
 - One Java 21 Spring Boot application with Maven Wrapper.
 - Plain Java Identity `User`, `EmailAddress`, `Role` and their unit tests; reconstitution/provisioning preserve existing roles.
 - PostgreSQL/PostGIS infrastructure, Flyway extension migration and JPA configuration.
-- JWT login/me, BCrypt credentials, controlled idempotent demo bootstrap; Swagger exposes E01–E06 (Identity and Disaster).
+- JWT login/me, BCrypt credentials, controlled idempotent demo bootstrap; Swagger exposes E01–E09 (Identity, Disaster and Reporting).
 - React/TypeScript/Vite login, memory-only session and feature route registration; Node 22.14.0/lockfile/CI checks.
 - Disaster ACTIVE→RESOLVED domain, E03–E06, JPA/Flyway V3 and published DisasterQuery.
 - Authority S05 list/filter/page/detail/create/edit/resolve screen using the real API.
@@ -235,9 +236,10 @@ verification if this occurs; CI and Docker builds use isolated output directorie
 - OpenAPI JSON: <http://localhost:8080/v3/api-docs>
 
 These GET endpoints are public for development; health details are hidden. OpenAPI
-exposes E01–E06. Login is public; me and Disaster reads require CITIZEN/AUTHORITY
-Bearer authentication; Disaster writes require AUTHORITY. Other business APIs remain
-denied. No generated user, Basic/form login, refresh or registration endpoint exists.
+exposes E01–E09. Login is public; me and Disaster reads require CITIZEN/AUTHORITY
+Bearer authentication; Disaster writes require AUTHORITY. Reporting POST requires
+CITIZEN; Reporting GET allows CITIZEN own reports and AUTHORITY all reports. E10–E15
+remain denied. No generated user, Basic/form login, refresh or registration endpoint exists.
 All app profiles require `JWT_SECRET_BASE64`; demo credentials are environment-only,
 as described in [P01 setup](docs/P01_LOCAL.md).
 Docker reports healthy based on readiness. A database outage makes readiness return
@@ -262,5 +264,5 @@ quality-attribute problem, with an ADR and comparable measurements.
 
 Follow the [single MVP plan](docs/PROMPTS_PHA_1_4_NGUOI.md) and
 [current progress](docs/phase1-progress.md): P01 is merged; review C1 acceptance
-and integrate B1 according to ownership and migration order before dependent tasks.
+and B1/C1 are integrated. B2 and the first B3 slice can proceed under their task prerequisites.
 They have not been started by P01. Frontend production Docker/proxy is still A2.

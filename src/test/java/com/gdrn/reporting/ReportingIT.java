@@ -11,7 +11,6 @@ import com.gdrn.reporting.domain.Coordinates;
 import com.gdrn.reporting.domain.Report;
 import com.gdrn.reporting.domain.ReportType;
 import com.gdrn.reporting.infrastructure.persistence.JdbcReportStore;
-import com.gdrn.shared.infrastructure.configuration.SecurityErrorWriter;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.Base64;
@@ -25,25 +24,13 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.boot.test.web.client.TestRestTemplate;
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Import;
-import org.springframework.core.annotation.Order;
-import org.springframework.core.io.FileSystemResource;
 import org.springframework.http.*;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.jdbc.core.namedparam.SqlParameterSource;
-import org.springframework.jdbc.datasource.init.ResourceDatabasePopulator;
-import org.springframework.security.config.annotation.web.builders.HttpSecurity;
-import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
-import org.springframework.security.config.http.SessionCreationPolicy;
-import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.oauth2.jose.jws.MacAlgorithm;
 import org.springframework.security.oauth2.jwt.*;
-import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationConverter;
-import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
@@ -53,11 +40,10 @@ import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 import org.testcontainers.utility.DockerImageName;
 
-/** Tests the B1 adapters with the PROPOSED route policy and schema, not a production integration claim. */
+/** Real HTTP/JWT/PostGIS tests using production security and Flyway migrations. */
 @Testcontainers
 @ActiveProfiles("test")
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
-@Import(ReportingIT.ProposedReportingPolicy.class)
 class ReportingIT {
     @Container static final PostgreSQLContainer<?> DATABASE = new PostgreSQLContainer<>(
             DockerImageName.parse("postgis/postgis:16-3.5").asCompatibleSubstituteFor("postgres"));
@@ -90,11 +76,8 @@ class ReportingIT {
     @Autowired JdbcReportStore store;
     @Autowired JwtEncoder encoder;
 
-    @BeforeEach void installProposalAndResetOnlyThisTestContainerReportingData() {
-        assertThat(jdbc.queryForObject("select count(*) from flyway_schema_history where success", Integer.class)).isEqualTo(2);
-        if (jdbc.queryForObject("select to_regclass('reporting_reports')::text", String.class) == null) {
-            new ResourceDatabasePopulator(new FileSystemResource("docs/handoffs/b1/reporting-schema.sql")).execute(dataSource);
-        }
+    @BeforeEach void resetOnlyThisTestContainerReportingData() {
+        assertThat(jdbc.queryForObject("select count(*) from flyway_schema_history where success", Integer.class)).isEqualTo(4);
         jdbc.update("delete from reporting_reports");
     }
 
@@ -124,7 +107,28 @@ class ReportingIT {
         assertThat(store.findById(id).orElseThrow().coordinates()).isEqualTo(new Coordinates(21.028, 105.834));
     }
 
-    @Test void proposedPolicyEnforcesAuthenticationRolesAndDefaultDeny() {
+    @Test void flywayUpgradesV3ToV4AndPreservesExistingIdentityAndDisasterRows() {
+        var base = org.flywaydb.core.Flyway.configure().dataSource(DATABASE.getJdbcUrl(), DATABASE.getUsername(), DATABASE.getPassword())
+                .schemas("reporting_upgrade_check").target("3").load();
+        base.migrate();
+        UUID user = UUID.randomUUID();
+        UUID disaster = UUID.randomUUID();
+        jdbc.update("insert into reporting_upgrade_check.identity_users(id,email,role) values (?, 'upgrade@example.test', 'CITIZEN')", user);
+        jdbc.update("""
+                insert into reporting_upgrade_check.disasters
+                    (id,name,type,severity,description,latitude,longitude,status,version,created_at,updated_at)
+                values (?, 'Upgrade fixture', 'FLOOD', 'HIGH', 'Preserved', 0, 0, 'ACTIVE', 0, now(), now())
+                """, disaster);
+        var upgrade = org.flywaydb.core.Flyway.configure().dataSource(DATABASE.getJdbcUrl(), DATABASE.getUsername(), DATABASE.getPassword())
+                .schemas("reporting_upgrade_check").load();
+        assertThat(upgrade.migrate().migrationsExecuted).isEqualTo(1);
+        assertThat(upgrade.migrate().migrationsExecuted).isZero();
+        assertThat(jdbc.queryForObject("select count(*) from reporting_upgrade_check.reporting_reports", Integer.class)).isZero();
+        assertThat(jdbc.queryForObject("select id from reporting_upgrade_check.identity_users", UUID.class)).isEqualTo(user);
+        assertThat(jdbc.queryForObject("select id from reporting_upgrade_check.disasters", UUID.class)).isEqualTo(disaster);
+    }
+
+    @Test void productionPolicyEnforcesAuthenticationRolesAndDefaultDeny() {
         for (String path : List.of("/api/reports", "/api/reports/" + UUID.randomUUID())) {
             var response = call(HttpMethod.GET, path, null, null);
             assertError(response, 401, "UNAUTHENTICATED");
@@ -266,33 +270,4 @@ class ReportingIT {
         assertThat(body.toString()).doesNotContain("reporting_reports", "stackTrace", "accessToken");
     }
 
-    /** Test-only wiring of the requested handoff policy; production SecurityConfiguration remains untouched. */
-    @TestConfiguration(proxyBeanMethods = false)
-    static class ProposedReportingPolicy {
-        @Bean @Order(0)
-        SecurityFilterChain proposedReportingChain(HttpSecurity http, SecurityErrorWriter errors) throws Exception {
-            var converter = new JwtAuthenticationConverter();
-            converter.setJwtGrantedAuthoritiesConverter(jwt -> {
-                String role = jwt.getClaimAsString("role");
-                return "CITIZEN".equals(role) || "AUTHORITY".equals(role)
-                        ? List.of(new SimpleGrantedAuthority("ROLE_" + role)) : List.of();
-            });
-            return http.securityMatcher("/api/reports", "/api/reports/*")
-                    .csrf(csrf -> csrf.ignoringRequestMatchers("/api/**"))
-                    .formLogin(AbstractHttpConfigurer::disable).httpBasic(AbstractHttpConfigurer::disable)
-                    .logout(AbstractHttpConfigurer::disable)
-                    .sessionManagement(s -> s.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-                    .requestCache(c -> c.disable())
-                    .authorizeHttpRequests(a -> a
-                            .requestMatchers(HttpMethod.POST, "/api/reports").hasRole("CITIZEN")
-                            .requestMatchers(HttpMethod.GET, "/api/reports", "/api/reports/*").hasAnyRole("CITIZEN", "AUTHORITY")
-                            .anyRequest().denyAll())
-                    .oauth2ResourceServer(o -> o.jwt(j -> j.jwtAuthenticationConverter(converter))
-                            .authenticationEntryPoint((r, s, e) -> errors.write(r, s, 401))
-                            .accessDeniedHandler((r, s, e) -> errors.write(r, s, 403)))
-                    .exceptionHandling(e -> e.authenticationEntryPoint((r, s, x) -> errors.write(r, s, 401))
-                            .accessDeniedHandler((r, s, x) -> errors.write(r, s, 403)))
-                    .build();
-        }
-    }
 }

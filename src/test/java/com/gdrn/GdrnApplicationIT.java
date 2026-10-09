@@ -91,6 +91,7 @@ class GdrnApplicationIT {
                 Integer.class)).isEqualTo(1);
         assertThat(jdbc.queryForObject("SELECT count(*) FROM flyway_schema_history WHERE version = '2' AND success", Integer.class)).isEqualTo(1);
         assertThat(jdbc.queryForObject("SELECT count(*) FROM flyway_schema_history WHERE version = '3' AND success", Integer.class)).isEqualTo(1);
+        assertThat(jdbc.queryForObject("SELECT count(*) FROM flyway_schema_history WHERE version = '4' AND success", Integer.class)).isEqualTo(1);
         assertThat(jdbc.queryForObject("SELECT ST_Distance(ST_Point(0, 0), ST_Point(3, 4))",
                 Double.class)).isEqualTo(5.0);
     }
@@ -108,7 +109,7 @@ class GdrnApplicationIT {
                 .schemas("disaster_upgrade_check").target("2").load();
         base.migrate();
         var upgrade = org.flywaydb.core.Flyway.configure().dataSource(DATABASE.getJdbcUrl(), DATABASE.getUsername(), DATABASE.getPassword())
-                .schemas("disaster_upgrade_check").load();
+                .schemas("disaster_upgrade_check").target("3").load();
         assertThat(upgrade.migrate().migrationsExecuted).isEqualTo(1);
         assertThat(jdbc.queryForObject("select count(*) from disaster_upgrade_check.identity_users", Integer.class)).isZero();
         assertThat(jdbc.queryForObject("select count(*) from disaster_upgrade_check.identity_credentials", Integer.class)).isZero();
@@ -153,6 +154,41 @@ class GdrnApplicationIT {
         assertProbe("readiness", HttpStatus.OK, "UP");
     }
 
+    @Test void disasterPaginationUsesOneSnapshotWhenAnotherTransactionInsertsBetweenItemsAndCount() throws Exception {
+        // Interpose only at the adapter's SELECT boundary; both SELECTs and the concurrent write hit real PostGIS.
+        Object target = org.springframework.test.util.AopTestUtils.getTargetObject(disasters);
+        var original = (jakarta.persistence.EntityManager) org.springframework.test.util.ReflectionTestUtils.getField(target, "entityManager");
+        var intercepted = org.mockito.Mockito.spy(original);
+        UUID id = UUID.randomUUID();
+        long before = disasters.search(new DisasterSearch(0, 100, DisasterSearch.Sort.CREATED_AT_DESC,
+                Optional.empty(), Optional.empty())).totalElements();
+        org.mockito.Mockito.doAnswer(invocation -> {
+            var query = (jakarta.persistence.TypedQuery<?>) invocation.callRealMethod();
+            var querySpy = org.mockito.Mockito.spy(query);
+            org.mockito.Mockito.doAnswer(read -> {
+                Object items = read.callRealMethod();
+                try (var worker = java.util.concurrent.Executors.newSingleThreadExecutor()) {
+                    worker.submit(() -> disasters.add(Disaster.create(id, "Concurrent snapshot", DisasterType.TSUNAMI,
+                            Severity.LOW, "Snapshot fixture", 0, 0, Instant.now())))
+                            .get(10, java.util.concurrent.TimeUnit.SECONDS);
+                }
+                return items;
+            }).when(querySpy).getResultList();
+            return querySpy;
+        }).when(intercepted).createQuery(org.mockito.ArgumentMatchers.startsWith("select d from DisasterEntity d"),
+                org.mockito.ArgumentMatchers.eq(com.gdrn.disaster.infrastructure.persistence.DisasterEntity.class));
+        try {
+            org.springframework.test.util.ReflectionTestUtils.setField(target, "entityManager", intercepted);
+            var page = disasters.search(new DisasterSearch(0, 100, DisasterSearch.Sort.CREATED_AT_DESC,
+                    Optional.empty(), Optional.empty()));
+            assertThat(page.totalElements()).isEqualTo(before);
+            assertThat(page.items()).extracting(Disaster::id).doesNotContain(id);
+        } finally {
+            org.springframework.test.util.ReflectionTestUtils.setField(target, "entityManager", original);
+            jdbc.update("delete from disasters where id = ?", id);
+        }
+    }
+
     @Test
     void refusing_traffic_changes_readiness_without_changing_liveness() {
         try {
@@ -189,19 +225,29 @@ class GdrnApplicationIT {
     }
 
     @Test
-    void openapi_and_swagger_publish_exactly_the_implemented_identity_and_disaster_slices() {
+    void openapi_and_swagger_publish_exactly_the_implemented_slices() {
         var response = http.getForEntity("/v3/api-docs", JsonNode.class);
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
         assertThat(response.getBody().path("info").path("title").asText())
                 .isEqualTo("Global Disaster Response Network API");
         assertThat(response.getBody().path("info").path("version").asText()).isEqualTo("Phase 1");
-        assertThat(response.getBody().path("paths").size()).isEqualTo(4);
+        assertThat(response.getBody().path("paths").size()).isEqualTo(6);
         assertThat(response.getBody().at("/paths/~1api~1auth~1login/post/operationId").asText()).isEqualTo("E01");
         assertThat(response.getBody().at("/paths/~1api~1auth~1me/get/operationId").asText()).isEqualTo("E02");
         assertThat(response.getBody().at("/paths/~1api~1disasters/get/operationId").asText()).isEqualTo("E03");
         assertThat(response.getBody().at("/paths/~1api~1disasters~1{id}/get/operationId").asText()).isEqualTo("E04");
         assertThat(response.getBody().at("/paths/~1api~1disasters/post/operationId").asText()).isEqualTo("E05");
         assertThat(response.getBody().at("/paths/~1api~1disasters~1{id}/patch/operationId").asText()).isEqualTo("E06");
+        assertThat(response.getBody().at("/paths/~1api~1reports/post/operationId").asText()).isEqualTo("E07");
+        assertThat(response.getBody().at("/paths/~1api~1reports/get/operationId").asText()).isEqualTo("E08");
+        assertThat(response.getBody().at("/paths/~1api~1reports~1{id}/get/operationId").asText()).isEqualTo("E09");
+        Set<String> operations = new HashSet<>();
+        response.getBody().path("paths").forEach(path -> path.forEach(operation -> {
+            if (operation.has("operationId")) operations.add(operation.path("operationId").asText());
+        }));
+        assertThat(operations).containsExactlyInAnyOrder("E01", "E02", "E03", "E04", "E05", "E06", "E07", "E08", "E09");
+        assertThat(response.getBody().at("/paths/~1api~1reports/post/security/0/bearerAuth").isArray()).isTrue();
+        assertThat(response.getBody().at("/paths/~1api~1reports/get/parameters").toString()).doesNotContain("radiusMeters", "ownerId");
         assertThat(response.getBody().at("/components/securitySchemes/bearerAuth/scheme").asText()).isEqualTo("bearer");
         assertThat(response.getBody().at("/paths/~1api~1auth~1me/get/security/0/bearerAuth").isArray()).isTrue();
         var swagger = http.getForEntity("/swagger-ui/index.html", String.class);
@@ -223,7 +269,7 @@ class GdrnApplicationIT {
                 .isEqualTo(HttpStatus.FORBIDDEN);
         String token = login("one@example.test").path("accessToken").asText();
         assertError(call(HttpMethod.GET, "/actuator/health/db", null, token), 403, "FORBIDDEN");
-        for (String path : List.of("/api/reports", "/api/rescue-missions", "/api/auth/register", "/api/auth/refresh", "/api/auth/logout")) {
+        for (String path : List.of("/api/rescue-missions", "/api/auth/register", "/api/auth/refresh", "/api/auth/logout")) {
             assertError(call(HttpMethod.GET, path, null, token), 403, "FORBIDDEN");
             assertError(call(HttpMethod.POST, path, "{}", token), 403, "FORBIDDEN");
         }

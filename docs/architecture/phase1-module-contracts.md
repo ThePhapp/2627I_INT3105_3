@@ -1,6 +1,6 @@
 # Pha 1 — published contracts và migration ledger
 
-**Contracts P00; trạng thái main 7be3b09:** Identity V2 và Disaster V3 đã có;
+**Contracts P00; tích hợp B1/C1 09/10/2026:** Identity V2, Disaster V3 và Reporting V4 đã có;
 DisasterQuery đã triển khai trong C1. ReportingQuery thuộc B2, chưa có trên main.
 Theo [kế hoạch](../PROMPTS_PHA_1_4_NGUOI.md), [HTTP/UI contract](../api/phase1-contract.md)
 và [ADR 005](../adr/005-phase1-mvp-auth-frontend.md).
@@ -143,7 +143,8 @@ nhánh riêng, không dùng ngày/owner prefix để lách thứ tự.
 | Đã có | Technical / 1 | Bootstrap | V1__enable_postgis.sql | Chỉ extension PostGIS; giữ nguyên |
 | 1 | Identity / 1 | P01 | V2__identity_accounts.sql | Đã merge qua e4b449b; identity_users + identity_credentials, không seed |
 | 2 | Disaster / 3 | C1 | V3__disasters.sql | Disaster lifecycle, expected-version atomic update; cấp sau khi xác nhận main chỉ có V1/V2 |
-| 3 | Reporting / 2 | B1, B2 | CHƯA CẤP | Report/soft-delete/spatial và phần B2 phát sinh |
+| 3 | Reporting / 2; tích hợp / 1 | B1 | V4__reporting_reports.sql | Cấp trong tích hợp B1/C1 theo yêu cầu merge, nền main bacf960 có V1–V3; DB local trước upgrade ở V2. PENDING/geography, không seed/FK xuyên module |
+| Tiếp theo | Reporting / 2 | B2 | CHƯA CẤP | Verification/soft-delete/spatial, migration mới trước Rescue; không sửa V4 |
 | 4 | Rescue / 4 | D1 | CHƯA CẤP | Team/mission/unique constraints sau B2 |
 
 B1 domain/application có thể làm song song C1 sau P01, nhưng persistence migration
@@ -163,8 +164,8 @@ DB/volume đang dùng. P00 không cấp version mới và không tạo migration
 P01 cập nhật ledger: User giữ id/email/role; credential hash là concern application/
 infrastructure, không nằm trong User. ORM maps hai entity riêng, credential có FK nội
 Identity tới user; email unique. V2 kế tiếp V1, đã merge qua e4b449b. V3 Disaster
-đã có trên main tại 3220765; Reporting vẫn phải được Người 1 cấp số sau khi review
-history/nhánh tích hợp, không tự cấp. [P01 handoff](../handoffs/P01.md) ghi validation lịch sử.
+đã có trên main tại 3220765; V4 Reporting được cấp trong tích hợp trên nền bacf960
+sau khi đối chiếu code và Flyway history. B2 phải nhận version mới khi sẵn sàng. [P01 handoff](../handoffs/P01.md) ghi validation lịch sử.
 
 Demo data được mô tả trong [HTTP contract](../api/phase1-contract.md#dữ-liệu-mẫu-và-json)
 chỉ để chuẩn bị. P01/D1 dùng controlled demo profile idempotent, credential từ env;
