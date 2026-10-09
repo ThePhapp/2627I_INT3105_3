@@ -136,7 +136,7 @@ policy with real requirements. Swagger metadata exists with no business operatio
 
 ## Testing and CI
 
-`mvnw test` runs ArchUnit through Surefire without Docker. `mvnw verify` also runs
+`mvnw test` runs Identity domain tests and ArchUnit through Surefire without Docker. `mvnw verify` also runs
 Failsafe's `GdrnApplicationIT` using an isolated PostGIS Testcontainer and a real HTTP
 server. It verifies application startup, Flyway history, PostGIS spatial behavior,
 public technical endpoints and denied requests, readiness refusal and a real
@@ -146,7 +146,10 @@ not `.env`. JUnit 5 and Mockito arrive through Spring Boot Test.
 
 Future domain tests use plain Java; application tests mock ports; persistence and
 important API/security tests use Testcontainers. CI on pushes and pull requests
-sets up Java 21, runs clean verify, validates Compose and builds the Docker image.
+sets up Java 21, runs clean verify, validates Compose, builds and starts the Docker
+stack and smoke-tests health, both probes, OpenAPI and Swagger before cleanup.
+`scripts/dev.ps1` provides the same local lifecycle, retains database volumes on
+shutdown and never overwrites an existing `.env`.
 Docker image assembly skips executing tests because Testcontainers requires a
 Docker daemon; the preceding CI verify is the test gate.
 

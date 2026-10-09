@@ -7,6 +7,38 @@ tại thư mục gốc repo, nơi có `pom.xml` và `docker-compose.yml`.
 Swagger và health check. Chưa có frontend, đăng nhập, API hay dữ liệu nghiệp vụ.
 Mở Swagger để kiểm tra backend; không có trang chủ web tại `/`.
 
+## Chạy nhanh bằng PowerShell
+
+Sau khi cài Docker Desktop và bật Linux containers, tại thư mục repo:
+
+```powershell
+.\scripts\dev.ps1 init
+.\scripts\dev.ps1 up
+```
+
+`init` chỉ tạo `.env` nếu thiếu, sinh một mật khẩu local ngẫu nhiên dùng chung cho
+database và host backend; không in mật khẩu hoặc ghi đè file cũ. Nếu đã có volume
+database từ lần chạy trước, điền credentials gốc của volume vào `.env` trước `up`.
+Thay password trong `.env` không đổi password của database đã khởi tạo.
+`up` cũng gọi `init` khi cần, build image, chờ cả hai container healthy và kiểm tra
+HTTP thật. Khi thành công, script in đường dẫn Swagger đúng theo port đang publish.
+
+| Lệnh | Kết quả |
+| --- | --- |
+| `.\scripts\dev.ps1 status` | Trạng thái và port container |
+| `.\scripts\dev.ps1 smoke` | Kiểm tra health, liveness, readiness, OpenAPI, Swagger |
+| `.\scripts\dev.ps1 smoke -BaseUrl http://localhost:8081` | Kiểm tra backend chạy host hoặc port riêng |
+| `.\scripts\dev.ps1 verify` | `mvnw.cmd clean verify`, cần JDK 21 và Docker |
+| `.\scripts\dev.ps1 down` | Dừng/xóa container, giữ named volume và `.env` |
+
+Script dùng được trên Windows PowerShell 5.1 và PowerShell 7. Có thể gọi bằng đường
+dẫn tuyệt đối từ bất kỳ thư mục nào. Nếu chính sách máy chặn script, dùng quy trình
+thủ công bên dưới theo chính sách của máy. Script không tự thay execution policy.
+Docker/server/native command lỗi sẽ trả exit code 1; không coi container vừa chạy
+là ứng dụng đã sẵn sàng. Health không lộ chi tiết kết nối database.
+
+Xem [prompt chia phần nhỏ](PROMPT_NEN_MONG.md) và [handoff nền tảng](handoffs/F00.md).
+
 ## 1. Chuẩn bị công cụ
 
 | Công cụ | Chạy toàn bộ bằng Docker | Chạy backend trực tiếp trên máy |

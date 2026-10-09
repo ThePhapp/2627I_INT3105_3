@@ -5,6 +5,11 @@ contracts và chạy validation. **DONE P00 là hoàn tất tài liệu**, khôn
 review/merge hay 15 APIs/6 screens đã implemented. ADR 005 còn Proposed.
 Xem [P00 handoff](handoffs/P00.md) và [kế hoạch/dependencies](PROMPTS_PHA_1_4_NGUOI.md).
 
+**Bổ sung 09/10/2026 — F00 nền tảng chạy được:** hoàn tất readiness/liveness,
+script local, Compose smoke và full verification trên nhánh `feat/runnable-foundation`.
+Xem [handoff F00](handoffs/F00.md) và [prompt chia commit](PROMPT_NEN_MONG.md).
+F00 là công việc kỹ thuật trước MVP, không chuyển P01 hoặc các task nghiệp vụ sang DONE.
+
 | Task | Owner | Prerequisite đã merge | Trạng thái | Evidence / phần còn lại |
 | --- | --- | --- | --- | --- |
 | P00 | 1; cả nhóm review | Repo nền | DONE | OpenAPI + module contracts + ADR 005; validation trong handoff; chờ review/merge |

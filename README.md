@@ -8,6 +8,23 @@ currently contains the bootstrap foundation, not a functioning disaster response
 
 **Hướng dẫn cho máy mới:** [Cài đặt và chạy sau khi clone repo (tiếng Việt)](docs/HUONG_DAN_CAI_DAT_VA_CHAY.md).
 
+**Nền móng chạy được:** [Prompt chia việc/commit](docs/PROMPT_NEN_MONG.md) và
+[kết quả kiểm chứng ngày 09/10/2026](docs/handoffs/F00.md).
+Với Docker Desktop đang chạy Linux containers, dùng PowerShell tại repo:
+
+```powershell
+.\scripts\dev.ps1 up       # Tạo .env nếu thiếu, build, chờ healthy và smoke-test
+.\scripts\dev.ps1 status   # Xem backend và database
+.\scripts\dev.ps1 verify   # Full Maven verification, bao gồm Testcontainers
+.\scripts\dev.ps1 down     # Dừng containers, giữ dữ liệu database
+```
+
+Mở [Swagger](http://localhost:8080/swagger-ui/index.html) sau khi `up` thành công.
+Script in URL đúng theo port Compose; có thể gọi script bằng đường dẫn tuyệt đối
+từ thư mục khác. `.env` có sẵn được giữ nguyên; file mới dùng mật khẩu ngẫu nhiên.
+Nếu đã có database volume, dùng lại credentials của volume trong `.env`.
+Đây là nền tảng kỹ thuật; login, frontend và API nghiệp vụ vẫn chưa được triển khai.
+
 **Kế hoạch triển khai tiếp theo:** [Pha 1 MVP — 4 người / 3 tuần](docs/KE_HOACH_PHA_1_3_TUAN.md)
 và [bộ 16 prompt chia theo người, có thứ tự phụ thuộc](docs/PROMPTS_PHA_1_4_NGUOI.md).
 Đây là kế hoạch phát triển, không phải danh sách tính năng đã hoàn thành.
@@ -27,7 +44,8 @@ JWT memory-only (reload cần login lại) và frontend là lựa chọn dự ki
 - PostgreSQL/PostGIS infrastructure, Flyway extension migration and JPA configuration.
 - Spring Security technical-endpoint policy, Actuator health and empty OpenAPI/Swagger.
 - ArchUnit boundary rules and real PostGIS/HTTP integration tests using Testcontainers.
-- Docker/Compose, GitHub Actions CI, architecture documentation and four initial ADRs.
+- Database-aware readiness, independent liveness and real database outage/recovery tests.
+- PowerShell lifecycle/smoke scripts, Docker/Compose, GitHub Actions runtime checks and ADRs.
 
 ## PLANNED
 
@@ -56,6 +74,7 @@ unless explicitly pinned. Hibernate Spatial is deferred until spatial mappings e
 
 ```text
 .github/workflows/ci.yml        Java 21 verification and Docker build
+scripts/dev.ps1                 Init/up/status/smoke/down/verify development commands
 .mvn/wrapper/                  Maven distribution configuration
 docs/architecture/             Architecture overview and future package tree
 docs/adr/                      Initial architecture decisions
@@ -169,8 +188,9 @@ useful without Docker, but is **not** the complete verification gate. Failsafe r
 cover context startup, Flyway, PostGIS spatial behavior, technical endpoints and
 security denials. Future domain/application tests can use JUnit 5 and Mockito.
 
-CI runs clean verify on Java 21 for pushes and pull requests, validates Compose and
-builds the runtime image. Image assembly skips test execution only because Docker
+CI runs clean verify on Java 21 for pushes and pull requests, validates Compose,
+builds and starts the runtime stack, runs HTTP smoke checks and stops the stack.
+Image assembly skips test execution only because Docker
 build does not provide the Testcontainers daemon; CI verification runs tests first.
 
 If a machine's Maven mirror returns truncated/corrupt artifacts, this optional command
@@ -190,12 +210,16 @@ verification if this occurs; CI and Docker builds use isolated output directorie
 ## Technical endpoints
 
 - Health: <http://localhost:8080/actuator/health>
+- Liveness: <http://localhost:8080/actuator/health/liveness>
+- Readiness (application + database): <http://localhost:8080/actuator/health/readiness>
 - Swagger UI: <http://localhost:8080/swagger-ui/index.html>
 - OpenAPI JSON: <http://localhost:8080/v3/api-docs>
 
 These GET endpoints are public for development; health details are hidden. OpenAPI
 has project metadata and no business operations. All other requests are denied.
 There is no generated login user, password login or JWT flow.
+Docker reports healthy based on readiness. A database outage makes readiness return
+503 while liveness remains UP; see [ADR 006](docs/adr/006-foundation-readiness.md).
 
 ## Architecture rules and scope
 
