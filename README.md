@@ -9,6 +9,25 @@ The complete disaster response flow remains planned.
 
 **Hướng dẫn cho máy mới:** [Cài đặt và chạy sau khi clone repo (tiếng Việt)](docs/HUONG_DAN_CAI_DAT_VA_CHAY.md).
 
+**Nền móng chạy được:** [Prompt chia việc/commit](docs/PROMPT_NEN_MONG.md) và
+[kết quả kiểm chứng ngày 09/10/2026](docs/handoffs/F00.md).
+Với Docker Desktop đang chạy Linux containers, dùng PowerShell tại repo:
+
+```powershell
+.\scripts\dev.ps1 up       # Tạo .env nếu thiếu, build, chờ healthy và smoke-test
+.\scripts\dev.ps1 status   # Xem backend và database
+.\scripts\dev.ps1 verify   # Full Maven verification, bao gồm Testcontainers
+.\scripts\dev.ps1 down     # Dừng containers, giữ dữ liệu database
+```
+
+Mở [Swagger](http://localhost:8080/swagger-ui/index.html) sau khi `up` thành công.
+Script in URL đúng theo port Compose; có thể gọi script bằng đường dẫn tuyệt đối
+từ thư mục khác. `.env` có sẵn được giữ nguyên; file mới dùng mật khẩu và JWT key
+ngẫu nhiên. Nếu `.env` cũ chưa có JWT key, chạy `scripts/local.ps1 -Action setup`
+để bổ sung cấu hình P01 và tài khoản demo, giữ giá trị đã cấu hình.
+Nếu đã có database volume, dùng lại credentials của volume trong `.env`.
+Script dev quản lý backend/database; script local bên dưới chạy thêm SPA và demo accounts.
+
 **Chạy local P01 trên Windows:** `powershell -NoProfile -ExecutionPolicy Bypass -File scripts/local.ps1 -Action setup`,
 sau đó cùng lệnh với `-Action start`. Frontend ở `http://127.0.0.1:5173/login`;
 backend dùng `APP_PORT` trong `.env`. PostgreSQL/PostGIS lưu dữ liệu trong named volume
@@ -37,7 +56,8 @@ Các API/UI module khác vẫn planned.
 - JWT login/me, BCrypt credentials, controlled idempotent demo bootstrap; Swagger exposes E01/E02 only.
 - React/TypeScript/Vite login, memory-only session and feature route registration; Node 22.14.0/lockfile/CI checks.
 - ArchUnit boundary rules and real PostGIS/HTTP integration tests using Testcontainers.
-- Docker/Compose, GitHub Actions CI, architecture documentation and four initial ADRs.
+- Database-aware readiness, independent liveness and real database outage/recovery tests.
+- PowerShell lifecycle/smoke scripts, Docker/Compose, GitHub Actions runtime checks and ADRs.
 
 ## PLANNED
 
@@ -66,6 +86,7 @@ unless explicitly pinned. Hibernate Spatial is deferred until spatial mappings e
 
 ```text
 .github/workflows/ci.yml        Java 21 verification and Docker build
+scripts/dev.ps1                 Init/up/status/smoke/down/verify development commands
 .mvn/wrapper/                  Maven distribution configuration
 docs/architecture/             Architecture overview and future package tree
 docs/adr/                      Initial architecture decisions
@@ -184,8 +205,9 @@ useful without Docker, but is **not** the complete verification gate. Failsafe r
 cover context startup, Flyway, PostGIS spatial behavior, technical endpoints and
 security denials. Future domain/application tests can use JUnit 5 and Mockito.
 
-CI runs clean verify on Java 21 for pushes and pull requests, validates Compose and
-builds the runtime image. Image assembly skips test execution only because Docker
+CI runs clean verify on Java 21 for pushes and pull requests, validates Compose,
+builds and starts the runtime stack, runs HTTP smoke checks and stops the stack.
+Image assembly skips test execution only because Docker
 build does not provide the Testcontainers daemon; CI verification runs tests first.
 
 If a machine's Maven mirror returns truncated/corrupt artifacts, this optional command
@@ -205,6 +227,8 @@ verification if this occurs; CI and Docker builds use isolated output directorie
 ## Technical endpoints
 
 - Health: <http://localhost:8080/actuator/health>
+- Liveness: <http://localhost:8080/actuator/health/liveness>
+- Readiness (application + database): <http://localhost:8080/actuator/health/readiness>
 - Swagger UI: <http://localhost:8080/swagger-ui/index.html>
 - OpenAPI JSON: <http://localhost:8080/v3/api-docs>
 
@@ -214,6 +238,8 @@ requires CITIZEN/AUTHORITY Bearer authentication. All future business APIs remai
 denied. No generated user, Basic/form login, refresh or registration endpoint exists.
 All app profiles require `JWT_SECRET_BASE64`; demo credentials are environment-only,
 as described in [P01 setup](docs/P01_LOCAL.md).
+Docker reports healthy based on readiness. A database outage makes readiness return
+503 while liveness remains UP; see [ADR 006](docs/adr/006-foundation-readiness.md).
 
 ## Architecture rules and scope
 

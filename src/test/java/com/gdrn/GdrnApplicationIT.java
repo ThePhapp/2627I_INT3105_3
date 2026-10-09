@@ -1,5 +1,9 @@
 package com.gdrn;
 
+import java.time.Duration;
+import org.springframework.boot.availability.AvailabilityChangeEvent;
+import org.springframework.boot.availability.ReadinessState;
+import org.springframework.context.ConfigurableApplicationContext;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -28,10 +32,15 @@ import org.testcontainers.utility.DockerImageName;
 import com.fasterxml.jackson.databind.JsonNode;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.awaitility.Awaitility.await;
 
 @Testcontainers
 @ActiveProfiles({"test", "demo"})
-@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
+@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT, properties = {
+        "spring.datasource.hikari.connection-timeout=1000",
+        "spring.datasource.hikari.validation-timeout=500",
+        "spring.datasource.hikari.data-source-properties.socketTimeout=2"
+})
 class GdrnApplicationIT {
     static final String SECRET = randomKey();
     static final String PASSWORD = UUID.randomUUID().toString();
@@ -67,6 +76,7 @@ class GdrnApplicationIT {
     @Autowired AccountStore accounts;
     @Autowired DemoAccountBootstrap bootstrap;
     @Autowired ConfigurableEnvironment environment;
+    @Autowired ConfigurableApplicationContext context;
 
     @Test
     void context_starts_with_flyway_and_postgis() {
@@ -98,6 +108,47 @@ class GdrnApplicationIT {
     }
 
     @Test
+    void probes_are_public_and_hide_components() {
+        assertProbe("liveness", HttpStatus.OK, "UP");
+        assertProbe("readiness", HttpStatus.OK, "UP");
+    }
+
+    @Test
+    void refusing_traffic_changes_readiness_without_changing_liveness() {
+        try {
+            AvailabilityChangeEvent.publish(context, ReadinessState.REFUSING_TRAFFIC);
+            assertProbe("readiness", HttpStatus.SERVICE_UNAVAILABLE, "OUT_OF_SERVICE");
+            assertProbe("liveness", HttpStatus.OK, "UP");
+        } finally {
+            AvailabilityChangeEvent.publish(context, ReadinessState.ACCEPTING_TRAFFIC);
+        }
+        assertProbe("readiness", HttpStatus.OK, "UP");
+    }
+
+    @Test
+    void database_outage_fails_readiness_but_does_not_fail_liveness() {
+        // Pause only this test's disposable container, never the developer's Compose DB.
+        var docker = DATABASE.getDockerClient();
+        docker.pauseContainerCmd(DATABASE.getContainerId()).exec();
+        try {
+            assertProbe("readiness", HttpStatus.SERVICE_UNAVAILABLE, "DOWN");
+            assertProbe("liveness", HttpStatus.OK, "UP");
+        } finally {
+            docker.unpauseContainerCmd(DATABASE.getContainerId()).exec();
+        }
+        await().atMost(Duration.ofSeconds(20)).untilAsserted(
+                () -> assertProbe("readiness", HttpStatus.OK, "UP"));
+    }
+
+    private void assertProbe(String probe, HttpStatus status, String health) {
+        var response = http.getForEntity("/actuator/health/" + probe, JsonNode.class);
+        assertThat(response.getStatusCode()).isEqualTo(status);
+        assertThat(response.getBody().path("status").asText()).isEqualTo(health);
+        assertThat(response.getBody().has("components")).isFalse();
+        assertThat(response.getBody().has("details")).isFalse();
+    }
+
+    @Test
     void openapi_and_swagger_publish_exactly_the_implemented_identity_slice() {
         var response = http.getForEntity("/v3/api-docs", JsonNode.class);
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
@@ -122,7 +173,12 @@ class GdrnApplicationIT {
                 .isEqualTo(HttpStatus.UNAUTHORIZED);
         assertThat(http.postForEntity("/actuator/health", null, String.class).getStatusCode())
                 .isEqualTo(HttpStatus.FORBIDDEN);
+        assertThat(http.getForEntity("/actuator/health/db", String.class).getStatusCode())
+                .isEqualTo(HttpStatus.UNAUTHORIZED);
+        assertThat(http.postForEntity("/actuator/health/readiness", null, String.class).getStatusCode())
+                .isEqualTo(HttpStatus.FORBIDDEN);
         String token = login("one@example.test").path("accessToken").asText();
+        assertError(call(HttpMethod.GET, "/actuator/health/db", null, token), 403, "FORBIDDEN");
         for (String path : List.of("/api/reports", "/api/disasters", "/api/rescue-missions", "/api/auth/register", "/api/auth/refresh", "/api/auth/logout")) {
             assertError(call(HttpMethod.GET, path, null, token), 403, "FORBIDDEN");
             assertError(call(HttpMethod.POST, path, "{}", token), 403, "FORBIDDEN");

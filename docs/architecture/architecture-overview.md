@@ -126,6 +126,11 @@ PostGIS today without an unused ORM spatial dependency.
 
 ## Technical HTTP and security foundation
 
+Liveness checks application availability; readiness also checks database connectivity.
+The Docker healthcheck uses `/actuator/health/readiness`; see [ADR 006](../adr/006-foundation-readiness.md).
+Only the aggregate health and exact liveness/readiness paths are public; direct
+component health paths are denied.
+
 Actuator exposes health only, with details hidden. GET access to health, OpenAPI
 and Swagger assets is public for development. P01 allows POST /api/auth/login and
 GET /api/auth/me for CITIZEN/AUTHORITY; every other route is denied. Spring Security
@@ -151,13 +156,17 @@ until S03/S04 exist; no fake report/operations pages. See [P01 setup](../P01_LOC
 `mvnw test` runs domain/application/configuration tests and ArchUnit through Surefire without Docker. `mvnw verify` also runs
 Failsafe's `GdrnApplicationIT` using an isolated PostGIS Testcontainer and a real HTTP
 server. It verifies application startup, Flyway history, PostGIS spatial behavior,
-public technical endpoints and denied requests. Missing Docker fails integration
+public technical endpoints and denied requests, readiness refusal and a real
+database outage/recovery while liveness stays UP. Missing Docker fails integration
 tests; nothing is silently skipped. Test datasource values come from the container,
 not `.env`. JUnit 5 and Mockito arrive through Spring Boot Test.
 
 Future domain tests use plain Java; application tests mock ports; persistence and
 important API/security tests use Testcontainers. CI on pushes and pull requests
-sets up Java 21, runs clean verify, validates Compose and builds the Docker image.
+sets up Java 21, runs clean verify, validates Compose, builds and starts the Docker
+stack and smoke-tests health, both probes, OpenAPI and Swagger before cleanup.
+`scripts/dev.ps1` provides the same local lifecycle, retains database volumes on
+shutdown and never overwrites an existing `.env`.
 Docker image assembly skips executing tests because Testcontainers requires a
 Docker daemon; the preceding CI verify is the test gate.
 
