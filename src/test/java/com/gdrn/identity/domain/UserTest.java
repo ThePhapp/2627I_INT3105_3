@@ -8,6 +8,13 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 class UserTest {
+    @Test
+    void provisioningAndReconstitutionPreserveRoleWithoutExpandingMvpAccess() {
+        var email = EmailAddress.of("authority@example.test");
+        assertEquals(Role.AUTHORITY, User.provision(UUID.randomUUID(), email, Role.AUTHORITY).role());
+        assertThrows(IllegalArgumentException.class, () -> User.provision(UUID.randomUUID(), email, Role.ADMIN));
+        assertEquals(false, User.reconstitute(UUID.randomUUID(), email, Role.RESPONDER).canSignIn());
+    }
 
     @Test
     void registrationAssignsTheCitizenRoleByDefault() {

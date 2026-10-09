@@ -2,9 +2,16 @@
 
 ## Status
 
-Proposed for team review — P00 design baseline, 2026-10-08. Not implemented.
+P00 design baseline was Proposed/unimplemented on 2026-10-08; implementation status
+was updated by P01 below. Remaining scope stays planned and team review is pending.
 Next unused number after ADR 004; ADR 001–004 remain unchanged. Acceptance by the
 team must be recorded; this document does not claim approval or runtime support.
+
+P01 implementation update (2026-10-08): user authorized implementation of the P00
+Identity/auth/SPA decisions. E01/E02/S01 are now implemented on the P01 branch;
+the remaining business scope and deployment work stay planned. This update records
+implementation evidence, not an unrecorded whole-team approval. See
+[P01 handoff](../handoffs/P01.md) for exact checks and residual A1/A2 work.
 
 ## Context
 
@@ -32,6 +39,13 @@ not promise cross-module atomicity at assignment commit. DB constraints protect
 mission uniqueness and atomic writes protect state transitions within each module.
 
 ### Planned authentication
+
+P01 implements the following authentication choices. CSRF ignores `/api/**` only;
+all other routes retain CSRF. Only POST login and GET me are allowed business routes;
+the remainder are default-denied. JWT parsing/signature uses Boot-managed Spring
+Security OAuth2 Resource Server/Nimbus. Login ignores a supplied stale Bearer header
+so this public operation authenticates only the supplied credentials. No cookies,
+form login, Basic, request cache, HTTP session or CORS wildcard is enabled.
 
 - JWT Bearer only, stateless; Spring Security compatible JWT libraries. No hand-written
   cryptography/parser; exact library/version compatibility confirmed by P01.
@@ -64,6 +78,19 @@ mission uniqueness and atomic writes protect state transitions within each modul
   be revisited. Dev proxy/same-origin production avoids broad CORS; no wildcard credentials.
 
 ### Planned frontend
+
+P01 implements React 19.3.0 / React Router 7.18.4 / Vite 8.3.4 / TypeScript 7.0.2,
+Node 22.14.0 pinned in `.nvmrc`, engines and CI, npm lockfile included in the change.
+Version metadata and [Vite requirements](https://vite.dev/guide/) were verified;
+[Spring Security 6.5 JWT reference](https://docs.spring.io/spring-security/reference/6.5/servlet/oauth2/resource-server/jwt.html)
+and [React Router declarative setup](https://reactrouter.com/start/declarative/installation)
+guided framework integration. Docker frontend packaging remains A2.
+
+Until S03/S04 feature routes exist, S01 displays the authenticated user's actual
+E02 identity and logout action at `/login`; it does not register placeholder business
+pages. Once a feature exports its real route, S01 redirects to `/my-reports` for
+citizen or `/operations/reports` for authority as specified. This is the P01 partial
+delivery boundary, not a permanent replacement for the six-screen flow.
 
 React + TypeScript + Vite SPA in `frontend/`, React Router, small fetch wrapper and
 shared CSS/form/loading/error components. No SSR/Redux/design system framework.

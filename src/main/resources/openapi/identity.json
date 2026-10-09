@@ -1,0 +1,606 @@
+{
+  "openapi": "3.0.3",
+  "paths": {
+    "/api/auth/login": {
+      "post": {
+        "operationId": "E01",
+        "summary": "E01 POST /api/auth/login",
+        "tags": [
+          "Identity"
+        ],
+        "description": "Email normalized as EmailAddress; invalid password, unknown user or inactive MVP role: identical 401 INVALID_CREDENTIALS. TTL 900 seconds, no refresh. Response Cache-Control: no-store.",
+        "x-owner": "Person 1",
+        "x-task": "P01",
+        "x-roles": [
+          "PUBLIC"
+        ],
+        "x-consumers": [
+          "S01"
+        ],
+        "x-status": "implemented",
+        "responses": {
+          "200": {
+            "description": "Success.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LoginResponse"
+                },
+                "example": {
+                  "accessToken": "<issued-jwt-not-a-real-token>",
+                  "tokenType": "Bearer",
+                  "expiresIn": 900,
+                  "expiresAt": "2026-10-08T03:15:00Z",
+                  "user": {
+                    "id": "00000000-0000-4000-8000-000000000001",
+                    "email": "citizen.one@example.test",
+                    "role": "CITIZEN"
+                  }
+                }
+              }
+            },
+            "headers": {
+              "Cache-Control": {
+                "schema": {
+                  "type": "string",
+                  "enum": [
+                    "no-store"
+                  ]
+                },
+                "description": "Do not cache authentication or user data."
+              }
+            }
+          },
+          "400": {
+            "description": "VALIDATION_ERROR",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "timestamp": "2026-10-08T03:00:00Z",
+                  "status": 400,
+                  "code": "VALIDATION_ERROR",
+                  "message": "Request could not be completed.",
+                  "path": "/api/auth/login",
+                  "fieldErrors": [
+                    {
+                      "field": "body",
+                      "message": "Invalid request shape."
+                    }
+                  ]
+                }
+              }
+            },
+            "headers": {
+              "Cache-Control": {
+                "schema": {
+                  "type": "string",
+                  "enum": [
+                    "no-store"
+                  ]
+                },
+                "description": "Do not cache authentication or user data."
+              }
+            }
+          },
+          "401": {
+            "description": "INVALID_CREDENTIALS",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "timestamp": "2026-10-08T03:00:00Z",
+                  "status": 401,
+                  "code": "INVALID_CREDENTIALS",
+                  "message": "Request could not be completed.",
+                  "path": "/api/auth/login",
+                  "fieldErrors": []
+                }
+              }
+            },
+            "headers": {
+              "Cache-Control": {
+                "schema": {
+                  "type": "string",
+                  "enum": [
+                    "no-store"
+                  ]
+                },
+                "description": "Do not cache authentication or user data."
+              }
+            }
+          },
+          "415": {
+            "description": "UNSUPPORTED_MEDIA_TYPE",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "timestamp": "2026-10-08T03:00:00Z",
+                  "status": 415,
+                  "code": "UNSUPPORTED_MEDIA_TYPE",
+                  "message": "Request could not be completed.",
+                  "path": "/api/auth/login",
+                  "fieldErrors": []
+                }
+              }
+            },
+            "headers": {
+              "Cache-Control": {
+                "schema": {
+                  "type": "string",
+                  "enum": [
+                    "no-store"
+                  ]
+                },
+                "description": "Do not cache authentication or user data."
+              }
+            }
+          },
+          "500": {
+            "description": "INTERNAL_ERROR",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "timestamp": "2026-10-08T03:00:00Z",
+                  "status": 500,
+                  "code": "INTERNAL_ERROR",
+                  "message": "Request could not be completed.",
+                  "path": "/api/auth/login",
+                  "fieldErrors": []
+                }
+              }
+            },
+            "headers": {
+              "Cache-Control": {
+                "schema": {
+                  "type": "string",
+                  "enum": [
+                    "no-store"
+                  ]
+                },
+                "description": "Do not cache authentication or user data."
+              }
+            }
+          }
+        },
+        "security": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LoginRequest"
+              },
+              "example": {
+                "email": "citizen.one@example.test",
+                "password": "<from-demo-environment>"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/auth/me": {
+      "get": {
+        "operationId": "E02",
+        "summary": "E02 GET /api/auth/me",
+        "tags": [
+          "Identity"
+        ],
+        "description": "Principal only; response Cache-Control: no-store. Unsupported authenticated role: 403.",
+        "x-owner": "Person 1",
+        "x-task": "P01",
+        "x-roles": [
+          "CITIZEN",
+          "AUTHORITY"
+        ],
+        "x-consumers": [
+          "S01",
+          "S02",
+          "S03",
+          "S04",
+          "S05",
+          "S06"
+        ],
+        "x-status": "implemented",
+        "responses": {
+          "200": {
+            "description": "Success.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/User"
+                },
+                "example": {
+                  "id": "00000000-0000-4000-8000-000000000001",
+                  "email": "citizen.one@example.test",
+                  "role": "CITIZEN"
+                }
+              }
+            },
+            "headers": {
+              "Cache-Control": {
+                "schema": {
+                  "type": "string",
+                  "enum": [
+                    "no-store"
+                  ]
+                },
+                "description": "Do not cache authentication or user data."
+              }
+            }
+          },
+          "400": {
+            "description": "VALIDATION_ERROR",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "timestamp": "2026-10-08T03:00:00Z",
+                  "status": 400,
+                  "code": "VALIDATION_ERROR",
+                  "message": "Request could not be completed.",
+                  "path": "/api/auth/me",
+                  "fieldErrors": [
+                    {
+                      "field": "body",
+                      "message": "Invalid request shape."
+                    }
+                  ]
+                }
+              }
+            },
+            "headers": {
+              "Cache-Control": {
+                "schema": {
+                  "type": "string",
+                  "enum": [
+                    "no-store"
+                  ]
+                },
+                "description": "Do not cache authentication or user data."
+              }
+            }
+          },
+          "401": {
+            "description": "UNAUTHENTICATED",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "timestamp": "2026-10-08T03:00:00Z",
+                  "status": 401,
+                  "code": "UNAUTHENTICATED",
+                  "message": "Request could not be completed.",
+                  "path": "/api/auth/me",
+                  "fieldErrors": []
+                }
+              }
+            },
+            "headers": {
+              "WWW-Authenticate": {
+                "schema": {
+                  "type": "string",
+                  "enum": [
+                    "Bearer"
+                  ]
+                },
+                "description": "Bearer challenge."
+              },
+              "Cache-Control": {
+                "schema": {
+                  "type": "string",
+                  "enum": [
+                    "no-store"
+                  ]
+                },
+                "description": "Do not cache authentication or user data."
+              }
+            }
+          },
+          "403": {
+            "description": "FORBIDDEN",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "timestamp": "2026-10-08T03:00:00Z",
+                  "status": 403,
+                  "code": "FORBIDDEN",
+                  "message": "Request could not be completed.",
+                  "path": "/api/auth/me",
+                  "fieldErrors": []
+                }
+              }
+            },
+            "headers": {
+              "Cache-Control": {
+                "schema": {
+                  "type": "string",
+                  "enum": [
+                    "no-store"
+                  ]
+                },
+                "description": "Do not cache authentication or user data."
+              }
+            }
+          },
+          "500": {
+            "description": "INTERNAL_ERROR",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "timestamp": "2026-10-08T03:00:00Z",
+                  "status": 500,
+                  "code": "INTERNAL_ERROR",
+                  "message": "Request could not be completed.",
+                  "path": "/api/auth/me",
+                  "fieldErrors": []
+                }
+              }
+            },
+            "headers": {
+              "Cache-Control": {
+                "schema": {
+                  "type": "string",
+                  "enum": [
+                    "no-store"
+                  ]
+                },
+                "description": "Do not cache authentication or user data."
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "bearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT"
+      }
+    },
+    "schemas": {
+      "Id": {
+        "type": "string",
+        "format": "uuid",
+        "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+        "description": "Canonical lowercase UUID; server-generated for new resources."
+      },
+      "Timestamp": {
+        "type": "string",
+        "format": "date-time",
+        "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(\\.\\d{1,9})?Z$",
+        "description": "ISO-8601 UTC, Z suffix, up to nanoseconds."
+      },
+      "Email": {
+        "type": "string",
+        "minLength": 3,
+        "maxLength": 254,
+        "pattern": "^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$",
+        "description": "Trim and lowercase with Locale.ROOT before validation, matching existing EmailAddress. Length applies after normalization."
+      },
+      "User": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "$ref": "#/components/schemas/Id"
+          },
+          "email": {
+            "$ref": "#/components/schemas/Email"
+          },
+          "role": {
+            "type": "string",
+            "enum": [
+              "CITIZEN",
+              "AUTHORITY"
+            ]
+          }
+        },
+        "required": [
+          "id",
+          "email",
+          "role"
+        ],
+        "example": {
+          "id": "00000000-0000-4000-8000-000000000001",
+          "email": "citizen.one@example.test",
+          "role": "CITIZEN"
+        }
+      },
+      "LoginRequest": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "email": {
+            "$ref": "#/components/schemas/Email"
+          },
+          "password": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 128,
+            "writeOnly": true,
+            "description": "Do not trim/normalize. Also at most 72 UTF-8 bytes for BCrypt compatibility. Never log."
+          }
+        },
+        "required": [
+          "email",
+          "password"
+        ],
+        "example": {
+          "email": "citizen.one@example.test",
+          "password": "<from-demo-environment>"
+        }
+      },
+      "LoginResponse": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "accessToken": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 4096
+          },
+          "tokenType": {
+            "type": "string",
+            "enum": [
+              "Bearer"
+            ]
+          },
+          "expiresIn": {
+            "type": "integer",
+            "enum": [
+              900
+            ]
+          },
+          "expiresAt": {
+            "$ref": "#/components/schemas/Timestamp"
+          },
+          "user": {
+            "$ref": "#/components/schemas/User"
+          }
+        },
+        "required": [
+          "accessToken",
+          "tokenType",
+          "expiresIn",
+          "expiresAt",
+          "user"
+        ],
+        "example": {
+          "accessToken": "<issued-jwt-not-a-real-token>",
+          "tokenType": "Bearer",
+          "expiresIn": 900,
+          "expiresAt": "2026-10-08T03:15:00Z",
+          "user": {
+            "id": "00000000-0000-4000-8000-000000000001",
+            "email": "citizen.one@example.test",
+            "role": "CITIZEN"
+          }
+        }
+      },
+      "FieldError": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "field": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 100
+          },
+          "message": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 500
+          }
+        },
+        "required": [
+          "field",
+          "message"
+        ],
+        "description": "field is body/query field name, id, or body for malformed JSON. Never include rejected values."
+      },
+      "Error": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "timestamp": {
+            "$ref": "#/components/schemas/Timestamp"
+          },
+          "status": {
+            "type": "integer",
+            "enum": [
+              400,
+              401,
+              403,
+              404,
+              409,
+              415,
+              500
+            ]
+          },
+          "code": {
+            "type": "string",
+            "enum": [
+              "VALIDATION_ERROR",
+              "UNAUTHENTICATED",
+              "INVALID_CREDENTIALS",
+              "FORBIDDEN",
+              "NOT_FOUND",
+              "INVALID_TRANSITION",
+              "STALE_VERSION",
+              "DISASTER_NOT_ACTIVE",
+              "REPORT_NOT_VERIFIED",
+              "REPORT_ALREADY_ASSIGNED",
+              "TEAM_BUSY",
+              "UNSUPPORTED_MEDIA_TYPE",
+              "INTERNAL_ERROR"
+            ]
+          },
+          "message": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 500
+          },
+          "path": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 2048
+          },
+          "fieldErrors": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/FieldError"
+            },
+            "maxItems": 100
+          }
+        },
+        "required": [
+          "timestamp",
+          "status",
+          "code",
+          "message",
+          "path",
+          "fieldErrors"
+        ],
+        "description": "fieldErrors always present; [] except validation errors. path excludes query string. No stack trace, credentials or token.",
+        "example": {
+          "timestamp": "2026-10-08T03:00:00Z",
+          "status": 409,
+          "code": "TEAM_BUSY",
+          "message": "Team already has an active mission.",
+          "path": "/api/rescue-missions",
+          "fieldErrors": []
+        }
+      }
+    }
+  }
+}
