@@ -7,7 +7,7 @@
 
 > **Scope note P00 — 08/10/2026:** Phần bên dưới giữ nguyên bối cảnh dài hạn/backlog,
 > không phải danh sách đã implemented. Scope thực thi hiện tại theo
-> [kế hoạch MVP 4 người / 3 tuần](docs/KE_HOACH_PHA_1_3_TUAN.md),
+> [kế hoạch MVP 4 người / 3 tuần](docs/PROMPTS_PHA_1_4_NGUOI.md),
 > [15 API + 6 UI/OpenAPI](docs/api/phase1-contract.md),
 > [published contracts và migration ledger](docs/architecture/phase1-module-contracts.md),
 > [ADR 005](docs/adr/005-phase1-mvp-auth-frontend.md) và
@@ -26,7 +26,7 @@
 > **Tên tiếng Việt:** Hệ thống Điều phối và Ứng phó Thảm họa Toàn cầu  
 > **Course:** Kiến trúc phần mềm  
 > **Team size:** 4 thành viên  
-> **Development window:** ~1 tháng cho Pha 1  
+> **Development window:** theo kế hoạch MVP duy nhất (3 tuần dự kiến)
 > **Purpose of this file:** Đây là nguồn ngữ cảnh kỹ thuật chính cho Codex/AI coding agent khi phân tích, thiết kế, sinh hoặc sửa code trong repository GDRN.
 
 ---
@@ -990,99 +990,11 @@ Metrics có thể gồm:
 
 ---
 
-# 21. Team Ownership Proposal
+# 21–22. Phân công và lịch triển khai
 
-## Member 1 — Identity + Disaster
-
-- Authentication.
-- Authorization.
-- User / role.
-- Disaster lifecycle.
-- Disaster API.
-
-## Member 2 — Reporting + Geo/Risk
-
-- Incident reports.
-- Verification.
-- PostGIS.
-- Spatial queries.
-- Basic risk policies.
-
-## Member 3 — Rescue Coordination
-
-- Rescue requests.
-- Rescue teams.
-- Rescue missions.
-- Priority calculation.
-- Assignment policy.
-
-## Member 4 — Resource + Alert
-
-- Resources.
-- Shelters.
-- Resource allocation.
-- Emergency alerts.
-- Alert lifecycle.
-
-Shared responsibilities:
-
-- Architecture decisions.
-- Module contracts.
-- Docker.
-- CI if implemented.
-- Integration tests.
-- Load tests.
-- Documentation.
-
----
-
-# 22. One-Month Phase 1 Plan
-
-## Week 1 — Foundation
-
-- Requirements.
-- Use cases.
-- C4 diagrams.
-- Domain model.
-- Module boundaries.
-- ERD.
-- API conventions.
-- Spring Boot skeleton.
-- Docker Compose.
-- PostgreSQL/PostGIS.
-- Authentication foundation.
-- Flyway.
-
-## Week 2 — Parallel Domain Development
-
-Mỗi thành viên triển khai module được phân công:
-
-- Domain.
-- Application use cases.
-- API.
-- Persistence adapter.
-- Tests.
-
-## Week 3 — Integration
-
-- Cross-module workflows.
-- Spatial queries.
-- Security.
-- Error handling.
-- Integration tests.
-- Swagger.
-- Docker stabilization.
-
-## Week 4 — Baseline Evaluation
-
-- Complete Phase 1 scope.
-- k6 load tests.
-- Kaggle benchmark.
-- Profiling.
-- Bottleneck analysis.
-- Architecture Decision Records.
-- README.
-- Phase 2 proposal.
+Chỉ dùng [kế hoạch và 16 prompt MVP](docs/PROMPTS_PHA_1_4_NGUOI.md).
+Đề xuất phân công module và lịch một tháng trước đây đã được thay thế; không dùng
+context dài hạn để cấp task, đổi owner hay mở rộng scope Pha 1.
 
 ---
 

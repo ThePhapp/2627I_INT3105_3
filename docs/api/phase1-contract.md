@@ -11,7 +11,7 @@ Ngày chốt thiết kế: 08/10/2026. Đây là baseline đích; trạng thái 
 bắt buộc. Nếu cần đổi, cập nhật cả YAML, tài liệu và handoff, để producer/consumer
 review trước khi merge. Không tự đổi tên trường để ghép UI.
 
-Nguồn scope: [kế hoạch](../KE_HOACH_PHA_1_3_TUAN.md),
+Nguồn scope: [kế hoạch](../PROMPTS_PHA_1_4_NGUOI.md),
 [quy tắc chung](../PROMPTS_PHA_1_4_NGUOI.md#quy-tắc-chung-áp-dụng-cho-mọi-prompt),
 [contracts module và sổ migration](../architecture/phase1-module-contracts.md),
 [ADR 005](../adr/005-phase1-mvp-auth-frontend.md).

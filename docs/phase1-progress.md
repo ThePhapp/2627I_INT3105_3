@@ -1,23 +1,22 @@
 # Tiến độ Pha 1
 
-Cập nhật 09/10/2026; P00, P01 và C1 đã hoàn tất phạm vi task.
+Cập nhật 09/10/2026 theo main `7be3b09`. Đây là bảng trạng thái, không phải kế hoạch riêng.
 **DONE không đồng nghĩa đã review/merge** hay toàn bộ 15 APIs/6 screens đã implemented.
-Runtime hiện có E01–E06, S01 và S05. ADR 005 ghi rõ phần đã triển khai.
+Main có P01 và code C1; chưa có handoff C1 để kết luận đầy đủ acceptance.
 Xem [P00 handoff](handoffs/P00.md) và [kế hoạch/dependencies](PROMPTS_PHA_1_4_NGUOI.md).
 
 **Bổ sung 09/10/2026 — F00 nền tảng chạy được:** hoàn tất readiness/liveness,
 script local, Compose smoke và full verification trên nhánh `feat/runnable-foundation`.
-Xem [handoff F00](handoffs/F00.md) và [prompt chia commit](PROMPT_NEN_MONG.md).
-F00 là công việc kỹ thuật trước MVP. Nhánh này đã tích hợp main tại `e4b449b`
-(PR #1 chứa P01); giữ cả E01/E02/S01 và readiness/smoke. Xem kết quả kiểm tra
-tích hợp trong handoff F00; không chuyển các task nghiệp vụ tiếp theo sang DONE.
+Xem [handoff F00](handoffs/F00.md) để tra lịch sử kiểm chứng. Nền tảng đã merge qua
+`853a532`; các nhãn F00–F04 không phải task mới trong kế hoạch. Chỉ dùng 16 task ở
+[kế hoạch duy nhất](PROMPTS_PHA_1_4_NGUOI.md) để giao việc tiếp.
 
 | Task | Owner | Prerequisite đã merge | Trạng thái | Evidence / phần còn lại |
 | --- | --- | --- | --- | --- |
-| P00 | 1; cả nhóm review | Repo nền | DONE | OpenAPI + module contracts + ADR 005; validation trong handoff; chờ review/merge |
+| P00 | 1; cả nhóm review | Repo nền | DONE | OpenAPI + module contracts + ADR 005; đã có trên main tại 0e19c36 |
 | P01 | 1 | P00 | DONE | [Handoff](handoffs/P01.md): E01/E02/S01; đã merge main qua PR #1 (`e4b449b`); kiểm tra tích hợp F00: 30 backend + 10 frontend tests pass |
-| B1 | 2 | P01 | TODO | Report tạo/xem/ownership; migration chờ Disaster |
-| C1 | 3 | P01 | DONE | [Handoff](handoffs/C1.md): E03–E06/S05, V3 và DisasterQuery; 40 backend + 15 frontend tests, 4 browser E2E pass |
+| B1 | 2 | P01 | CHƯA TÍCH HỢP | Main chưa có Reporting; nhánh feat/b1-reports có commit 5ff284a, cần review/tích hợp theo task B1 và ledger |
+| C1 | 3 | P01 | CHỜ NGHIỆM THU | Main có domain/use cases (6fccbe4), persistence/V3 (3220765), E03–E06 (bc8dfec), S05 (7be3b09); còn handoff C1 và đối chiếu acceptance/UI thật |
 | B2 | 2 | B1, C1 | TODO | Verify/withdraw/spatial, ReportingQuery |
 | D1 | 4 | B2, C1 | TODO | Rescue backend/DB race protection |
 | B3 | 2 | B1; B2/D1 để hoàn tất | TODO | S02/S03 |

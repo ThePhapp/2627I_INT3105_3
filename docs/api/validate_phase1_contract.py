@@ -33,7 +33,7 @@ UniqueKeyLoader.add_constructor(
 )
 spec = yaml.load((ROOT / 'docs/api/phase1-contract.yaml').read_text(encoding='utf-8'), Loader=UniqueKeyLoader)
 validate_spec(spec)
-plan = (ROOT / 'docs/KE_HOACH_PHA_1_3_TUAN.md').read_text(encoding='utf-8')
+plan = (ROOT / 'docs/PROMPTS_PHA_1_4_NGUOI.md').read_text(encoding='utf-8')
 md = (ROOT / 'docs/api/phase1-contract.md').read_text(encoding='utf-8')
 expected = {eid: (method.lower(), path) for eid, method, path in
             re.findall(r'\| (E\d{2}) \| (GET|POST|PATCH|DELETE) ([^ ]+) \|', plan)}

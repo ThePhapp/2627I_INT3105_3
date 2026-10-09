@@ -42,7 +42,8 @@ thủ công bên dưới theo chính sách của máy. Script không tự thay e
 Docker/server/native command lỗi sẽ trả exit code 1; không coi container vừa chạy
 là ứng dụng đã sẵn sàng. Health không lộ chi tiết kết nối database.
 
-Xem [prompt chia phần nhỏ](PROMPT_NEN_MONG.md) và [handoff nền tảng](handoffs/F00.md).
+Task phát triển chỉ lấy từ [kế hoạch duy nhất](PROMPTS_PHA_1_4_NGUOI.md).
+[Handoff nền tảng](handoffs/F00.md) lưu kết quả lịch sử, không phải prompt giao việc.
 
 ## 1. Chuẩn bị công cụ
 
