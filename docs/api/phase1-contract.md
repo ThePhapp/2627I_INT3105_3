@@ -1,15 +1,16 @@
 # Hợp đồng HTTP/UI Pha 1 — P00
 
-P01 status: E01/E02 đã implemented, S01 dùng API thật; các operation/screen còn lại
-vẫn planned. YAML dưới đây giữ baseline đích P00, không đại diện runtime Swagger.
-Runtime chỉ công bố slice Identity; xem [handoff P01](../handoffs/P01.md).
+Main tại 7be3b09 có P01 (E01/E02/S01) và code C1 (E03–E06/S05).
+Runtime công bố slice Identity và Disaster; C1 còn cần handoff/nghiệm thu đầy đủ.
+YAML dưới đây giữ baseline đích P00, không đại diện toàn bộ runtime đã implemented.
+E07–E15 và các màn hình còn lại chưa có trên main; xem [tiến độ](../phase1-progress.md).
 
 Ngày chốt thiết kế: 08/10/2026. **Planned, chưa implemented.** Chuẩn máy đọc là
 [OpenAPI 3.0.3](phase1-contract.yaml); quy tắc có điều kiện dưới đây cũng là yêu cầu
 bắt buộc. Nếu cần đổi, cập nhật cả YAML, tài liệu và handoff, để producer/consumer
 review trước khi merge. Không tự đổi tên trường để ghép UI.
 
-Nguồn scope: [kế hoạch](../KE_HOACH_PHA_1_3_TUAN.md),
+Nguồn scope: [kế hoạch](../PROMPTS_PHA_1_4_NGUOI.md),
 [quy tắc chung](../PROMPTS_PHA_1_4_NGUOI.md#quy-tắc-chung-áp-dụng-cho-mọi-prompt),
 [contracts module và sổ migration](../architecture/phase1-module-contracts.md),
 [ADR 005](../adr/005-phase1-mvp-auth-frontend.md).

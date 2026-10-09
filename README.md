@@ -9,8 +9,7 @@ The complete disaster response flow remains planned.
 
 **Hướng dẫn cho máy mới:** [Cài đặt và chạy sau khi clone repo (tiếng Việt)](docs/HUONG_DAN_CAI_DAT_VA_CHAY.md).
 
-**Nền móng chạy được:** [Prompt chia việc/commit](docs/PROMPT_NEN_MONG.md) và
-[kết quả kiểm chứng ngày 09/10/2026](docs/handoffs/F00.md).
+**Nền móng chạy được:** [kết quả kiểm chứng lịch sử ngày 09/10/2026](docs/handoffs/F00.md).
 Với Docker Desktop đang chạy Linux containers, dùng PowerShell tại repo:
 
 ```powershell
@@ -34,8 +33,7 @@ backend dùng `APP_PORT` trong `.env`. PostgreSQL/PostGIS lưu dữ liệu trong
 của Compose. Tài khoản đăng nhập nằm trong `.env`, không cần tạo SQL thủ công.
 Xem [start/stop và database local](docs/P01_LOCAL.md#chạy-local-lâu-dài-trên-windows).
 
-**Kế hoạch triển khai tiếp theo:** [Pha 1 MVP — 4 người / 3 tuần](docs/KE_HOACH_PHA_1_3_TUAN.md)
-và [bộ 16 prompt chia theo người, có thứ tự phụ thuộc](docs/PROMPTS_PHA_1_4_NGUOI.md).
+**Kế hoạch triển khai duy nhất:** [Pha 1 MVP và 16 prompt theo owner/dependency](docs/PROMPTS_PHA_1_4_NGUOI.md).
 Đây là kế hoạch phát triển, không phải danh sách tính năng đã hoàn thành.
 
 **P00 design baseline (planned):** [HTTP/OpenAPI và 15 API/6 màn hình](docs/api/phase1-contract.md),
@@ -46,14 +44,16 @@ MVP ba tuần giới hạn Identity/Disaster/Reporting/Rescue và SPA cơ bản.
 Geo risk, RescueRequest riêng và các API lớn hơn trong context dài hạn là backlog.
 **P01 implemented:** E01/E02, JWT memory-only (reload cần login lại), demo accounts
 và S01 login thật. Xem [cách chạy P01](docs/P01_LOCAL.md) và [handoff P01](docs/handoffs/P01.md).
-Các API/UI module khác vẫn planned.
+Main tại `7be3b09` còn có code C1: E03–E06, DisasterQuery, V3 và S05.
+Đây là các phần của C1 trong kế hoạch duy nhất; cần hoàn tất handoff/acceptance C1,
+không suy ra toàn bộ task DONE từ tên commit. Reporting/Rescue chưa có trên main.
 
 ## CURRENTLY IMPLEMENTED
 
 - One Java 21 Spring Boot application with Maven Wrapper.
 - Plain Java Identity `User`, `EmailAddress`, `Role` and their unit tests; reconstitution/provisioning preserve existing roles.
 - PostgreSQL/PostGIS infrastructure, Flyway extension migration and JPA configuration.
-- JWT login/me, BCrypt credentials, controlled idempotent demo bootstrap; Swagger exposes E01/E02 only.
+- JWT login/me, BCrypt credentials, controlled idempotent demo bootstrap; Swagger exposes E01–E06 (Identity and Disaster).
 - React/TypeScript/Vite login, memory-only session and feature route registration; Node 22.14.0/lockfile/CI checks.
 - ArchUnit boundary rules and real PostGIS/HTTP integration tests using Testcontainers.
 - Database-aware readiness, independent liveness and real database outage/recovery tests.
@@ -258,5 +258,7 @@ external brokers, separate databases per module and production cloud infrastruct
 Phase 2 may consider selected improvements only after benchmarks identify a concrete
 quality-attribute problem, with an ADR and comparable measurements.
 
-Next after P01 review/merge: **B1/C1 and the planned A1/A2 follow-ups**.
+Follow the [single MVP plan](docs/PROMPTS_PHA_1_4_NGUOI.md) and
+[current progress](docs/phase1-progress.md): P01 is merged; review C1 acceptance
+and integrate B1 according to ownership and migration order before dependent tasks.
 They have not been started by P01. Frontend production Docker/proxy is still A2.

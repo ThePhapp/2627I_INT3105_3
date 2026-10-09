@@ -5,6 +5,10 @@ Read `GDRN_CODEX_PROJECT_CONTEXT.md` for the long-term project specification and
 The initial bootstrap contains no business features. The context document's JWT,
 API, schema, and benchmark examples are future work, not implemented behavior.
 
+Use `docs/PROMPTS_PHA_1_4_NGUOI.md` as the only implementation plan and task catalog.
+Contracts/ADRs define technical requirements; progress/handoffs record evidence,
+not alternative task plans. Inspect current code before inferring completion.
+
 ## Must
 
 - Preserve the single-application Modular Monolith and module boundaries under `com.gdrn`.

@@ -7,17 +7,20 @@ coordination. It is not an operational emergency response system. The repository
 currently provides the foundation and P01 Identity/login slice: one Java 21 Spring Boot
 application, database infrastructure, technical endpoints, tests, Docker and CI.
 Plain Java Identity `User`, `EmailAddress`, `Role` and their unit tests also exist.
-P01 adds login/me, user/credential persistence and the login SPA. Other business
-APIs/screens remain unimplemented; see [handoff P01](../handoffs/P01.md).
+P01 adds login/me, user/credential persistence and the login SPA. Main at 7be3b09
+also contains C1 code: E03–E06, DisasterQuery, migration V3 and S05. C1 still needs
+its handoff and complete acceptance review; see [progress](../phase1-progress.md).
+Reporting/Rescue are not integrated on main.
 
 `GDRN_CODEX_PROJECT_CONTEXT.md` is preserved as the long-term project context. Its
 JWT, API examples, proposed tables and completed Phase 1 rubric describe future
-work. The [three-week MVP plan](../KE_HOACH_PHA_1_3_TUAN.md) narrows implementation to
+work. The [three-week MVP plan](../PROMPTS_PHA_1_4_NGUOI.md) narrows implementation to
 Identity/Disaster/Reporting/Rescue and six basic SPA screens. Resource/Alert, separate
 RescueRequest, Geo risk, and the larger context API list remain product backlog.
 [P00 HTTP/OpenAPI](../api/phase1-contract.md) defines exactly 15 planned operations;
 [module contracts and migration ledger](phase1-module-contracts.md) define the future
-Rescue → Reporting → Disaster dependency. No Java contracts are implemented yet.
+Rescue → Reporting → Disaster dependency. DisasterQuery is implemented by C1;
+ReportingQuery remains scheduled for B2.
 [ADR 005](../adr/005-phase1-mvp-auth-frontend.md) proposes JWT memory-only (reload needs
 login), no refresh and CITIZEN/AUTHORITY with React/TypeScript/Vite. ADR 004 remains a
 future event proposal, not an MVP event bus. See [progress](../phase1-progress.md)
@@ -133,13 +136,14 @@ component health paths are denied.
 
 Actuator exposes health only, with details hidden. GET access to health, OpenAPI
 and Swagger assets is public for development. P01 allows POST /api/auth/login and
-GET /api/auth/me for CITIZEN/AUTHORITY; every other route is denied. Spring Security
+GET /api/auth/me for CITIZEN/AUTHORITY. C1 adds Disaster reads for both roles and
+Disaster POST/PATCH for AUTHORITY; other unimplemented routes remain denied. Spring Security
 Resource Server/Nimbus verifies HS256/issuer/audience/time/required claims; key is
 environment-only. No generated user, Basic/form/cookie auth, registration or refresh.
 CSRF ignores /api/** for Bearer-only auth; other paths retain protection. Session
 creation is stateless and request caching is off. JSON errors and no-store headers
-are consistent. Swagger exposes only E01/E02 via a checked-in implemented contract
-slice; future modules must extend it as their real controllers merge.
+are consistent. Swagger exposes E01–E06 via checked-in Identity and Disaster contract
+slices; future modules must extend them as their real controllers merge.
 
 API extracts UUID and role from verified Jwt into plain application arguments;
 IdentityService uses account/password/token ports, JPA/BCrypt/Nimbus are outer
