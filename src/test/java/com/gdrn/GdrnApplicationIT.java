@@ -189,15 +189,19 @@ class GdrnApplicationIT {
     }
 
     @Test
-    void openapi_and_swagger_publish_exactly_the_implemented_identity_slice() {
+    void openapi_and_swagger_publish_exactly_the_implemented_identity_and_disaster_slices() {
         var response = http.getForEntity("/v3/api-docs", JsonNode.class);
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
         assertThat(response.getBody().path("info").path("title").asText())
                 .isEqualTo("Global Disaster Response Network API");
         assertThat(response.getBody().path("info").path("version").asText()).isEqualTo("Phase 1");
-        assertThat(response.getBody().path("paths").size()).isEqualTo(2);
+        assertThat(response.getBody().path("paths").size()).isEqualTo(4);
         assertThat(response.getBody().at("/paths/~1api~1auth~1login/post/operationId").asText()).isEqualTo("E01");
         assertThat(response.getBody().at("/paths/~1api~1auth~1me/get/operationId").asText()).isEqualTo("E02");
+        assertThat(response.getBody().at("/paths/~1api~1disasters/get/operationId").asText()).isEqualTo("E03");
+        assertThat(response.getBody().at("/paths/~1api~1disasters~1{id}/get/operationId").asText()).isEqualTo("E04");
+        assertThat(response.getBody().at("/paths/~1api~1disasters/post/operationId").asText()).isEqualTo("E05");
+        assertThat(response.getBody().at("/paths/~1api~1disasters~1{id}/patch/operationId").asText()).isEqualTo("E06");
         assertThat(response.getBody().at("/components/securitySchemes/bearerAuth/scheme").asText()).isEqualTo("bearer");
         assertThat(response.getBody().at("/paths/~1api~1auth~1me/get/security/0/bearerAuth").isArray()).isTrue();
         var swagger = http.getForEntity("/swagger-ui/index.html", String.class);
@@ -219,10 +223,86 @@ class GdrnApplicationIT {
                 .isEqualTo(HttpStatus.FORBIDDEN);
         String token = login("one@example.test").path("accessToken").asText();
         assertError(call(HttpMethod.GET, "/actuator/health/db", null, token), 403, "FORBIDDEN");
-        for (String path : List.of("/api/reports", "/api/disasters", "/api/rescue-missions", "/api/auth/register", "/api/auth/refresh", "/api/auth/logout")) {
+        for (String path : List.of("/api/reports", "/api/rescue-missions", "/api/auth/register", "/api/auth/refresh", "/api/auth/logout")) {
             assertError(call(HttpMethod.GET, path, null, token), 403, "FORBIDDEN");
             assertError(call(HttpMethod.POST, path, "{}", token), 403, "FORBIDDEN");
         }
+    }
+
+    @Test void disasterApisEnforceRolesExpectedVersionAndLifecycle() {
+        String citizen = login("one@example.test").path("accessToken").asText();
+        String authority = login("ops@example.test").path("accessToken").asText();
+        assertError(call(HttpMethod.GET, "/api/disasters", null, null), 401, "UNAUTHENTICATED");
+        assertThat(call(HttpMethod.GET, "/api/disasters", null, citizen).getStatusCode().value()).isEqualTo(200);
+
+        String create = """
+                {"name":"  C1 flood exercise  ","type":"FLOOD","severity":"HIGH",
+                 "description":"  Water is rising  ","latitude":21.028,"longitude":105.834}
+                """;
+        assertError(call(HttpMethod.POST, "/api/disasters", create, citizen), 403, "FORBIDDEN");
+        assertError(call(HttpMethod.PATCH, "/api/disasters/00000000-0000-4000-8000-000000000004",
+                "{\"expectedVersion\":0,\"status\":\"RESOLVED\"}", citizen), 403, "FORBIDDEN");
+
+        var created = call(HttpMethod.POST, "/api/disasters", create, authority);
+        assertThat(created.getStatusCode().value()).isEqualTo(201);
+        assertThat(created.getHeaders().getCacheControl()).isEqualTo("no-store");
+        assertThat(created.getBody().path("name").asText()).isEqualTo("C1 flood exercise");
+        assertThat(created.getBody().path("status").asText()).isEqualTo("ACTIVE");
+        assertThat(created.getBody().path("version").asLong()).isZero();
+        String path = "/api/disasters/" + created.getBody().path("id").asText();
+        assertThat(call(HttpMethod.GET, path, null, citizen).getBody()).isEqualTo(created.getBody());
+        assertThat(call(HttpMethod.GET, path, null, authority).getStatusCode().value()).isEqualTo(200);
+
+        var edited = call(HttpMethod.PATCH, path,
+                "{\"expectedVersion\":0,\"severity\":\"CRITICAL\"}", authority);
+        assertThat(edited.getStatusCode().value()).isEqualTo(200);
+        assertThat(edited.getBody().path("version").asLong()).isEqualTo(1);
+        assertThat(edited.getBody().path("severity").asText()).isEqualTo("CRITICAL");
+        assertError(call(HttpMethod.PATCH, path,
+                "{\"expectedVersion\":0,\"name\":\"Stale\"}", authority), 409, "STALE_VERSION");
+
+        var resolved = call(HttpMethod.PATCH, path,
+                "{\"expectedVersion\":1,\"status\":\"RESOLVED\"}", authority);
+        assertThat(resolved.getStatusCode().value()).isEqualTo(200);
+        assertThat(resolved.getBody().path("status").asText()).isEqualTo("RESOLVED");
+        assertError(call(HttpMethod.PATCH, path,
+                "{\"expectedVersion\":2,\"name\":\"Cannot change\"}", authority), 409, "INVALID_TRANSITION");
+    }
+
+    @Test void disasterApisValidateShapeReferencesFiltersAndSort() {
+        String authority = login("ops@example.test").path("accessToken").asText();
+        for (String body : List.of("{}", "null", "[]", "{", "{\"name\":null}",
+                "{\"name\":\"x\",\"type\":\"flood\",\"severity\":\"HIGH\",\"description\":\"x\",\"latitude\":0,\"longitude\":0}",
+                "{\"name\":\"x\",\"type\":\"FLOOD\",\"severity\":\"HIGH\",\"description\":\"x\",\"latitude\":91,\"longitude\":0}",
+                "{\"name\":\"x\",\"type\":\"FLOOD\",\"severity\":\"HIGH\",\"description\":\"x\",\"latitude\":0,\"longitude\":0,\"extra\":true}")) {
+            assertError(call(HttpMethod.POST, "/api/disasters", body, authority), 400, "VALIDATION_ERROR");
+        }
+        var textHeaders = new HttpHeaders(); textHeaders.setContentType(MediaType.TEXT_PLAIN); textHeaders.setBearerAuth(authority);
+        assertError(http.exchange("/api/disasters", HttpMethod.POST, new HttpEntity<>("data", textHeaders), JsonNode.class),
+                415, "UNSUPPORTED_MEDIA_TYPE");
+        for (String path : List.of("/api/disasters?page=-1", "/api/disasters?size=101",
+                "/api/disasters?sort=name,asc", "/api/disasters?status=active", "/api/disasters?unknown=1",
+                "/api/disasters?page=0&page=1")) {
+            assertError(call(HttpMethod.GET, path, null, authority), 400, "VALIDATION_ERROR");
+        }
+        assertError(call(HttpMethod.GET, "/api/disasters/NOT-A-UUID", null, authority), 400, "VALIDATION_ERROR");
+        assertError(call(HttpMethod.GET, "/api/disasters/00000000-0000-4000-8000-000000000099", null, authority),
+                404, "NOT_FOUND");
+        for (String body : List.of("{}", "null", "[]", "{\"expectedVersion\":0}",
+                "{\"expectedVersion\":null,\"name\":\"x\"}",
+                "{\"expectedVersion\":0,\"status\":\"ACTIVE\"}",
+                "{\"expectedVersion\":0,\"name\":null}")) {
+            var response = call(HttpMethod.PATCH, "/api/disasters/00000000-0000-4000-8000-000000000099", body, authority);
+            if (body.contains("\"status\":\"ACTIVE\"")) assertError(response, 404, "NOT_FOUND");
+            else assertError(response, 400, "VALIDATION_ERROR");
+        }
+        var filtered = call(HttpMethod.GET,
+                "/api/disasters?page=0&size=100&sort=createdAt,asc&status=ACTIVE&type=FLOOD", null, authority);
+        assertThat(filtered.getStatusCode().value()).isEqualTo(200);
+        assertThat(filtered.getBody().path("items")).allSatisfy(item -> {
+            assertThat(item.path("status").asText()).isEqualTo("ACTIVE");
+            assertThat(item.path("type").asText()).isEqualTo("FLOOD");
+        });
     }
 
     @Test void loginAndMeUseRealCredentialsForBothRolesWithoutLeakingHashOrPassword() {

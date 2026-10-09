@@ -3,7 +3,6 @@ package com.gdrn.disaster.application;
 import com.gdrn.disaster.domain.DisasterStatus;
 import com.gdrn.disaster.domain.DisasterType;
 import com.gdrn.disaster.domain.Severity;
-import java.util.Locale;
 
 public final class DisasterInput {
     private DisasterInput() {}
@@ -15,7 +14,7 @@ public final class DisasterInput {
     private static <T extends Enum<T>> T value(String raw, Class<T> type, String field) {
         if (raw == null || !raw.equals(raw.trim()) || raw.isEmpty()) throw new InvalidDisasterInput(field);
         try {
-            return Enum.valueOf(type, raw.toUpperCase(Locale.ROOT));
+            return Enum.valueOf(type, raw);
         } catch (IllegalArgumentException error) {
             throw new InvalidDisasterInput(field);
         }
