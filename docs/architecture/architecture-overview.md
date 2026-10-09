@@ -10,6 +10,13 @@ Plain Java Identity `User`, `EmailAddress`, `Role` and their unit tests also exi
 P01 adds login/me, user/credential persistence and the login SPA. Other business
 APIs/screens remain unimplemented; see [handoff P01](../handoffs/P01.md).
 
+B1 update (2026-10-09): Reporting E07/E08/E09 domain, application and adapters now
+exist, with PostGIS tests. They remain inaccessible under production security until
+C1 and an allocated Reporting migration are integrated by the integration owner.
+Swagger still publishes only E01/E02. See [B1 handoff](../handoffs/B1.md) and
+[ADR 006](../adr/006-reporting-postgis-data-mapper.md) for the JDBC data mapper,
+request snapshot semantics and deployment gates. No Reporting UI or B2 commands exist.
+
 `GDRN_CODEX_PROJECT_CONTEXT.md` is preserved as the long-term project context. Its
 JWT, API examples, proposed tables and completed Phase 1 rubric describe future
 work. The [three-week MVP plan](../KE_HOACH_PHA_1_3_TUAN.md) narrows implementation to

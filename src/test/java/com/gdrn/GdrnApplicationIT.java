@@ -1,22 +1,35 @@
 package com.gdrn;
 
+import java.time.Instant;
+import java.util.Base64;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Locale;
+import java.util.Map;
+import java.util.Set;
+import java.util.UUID;
+
+import static org.assertj.core.api.Assertions.assertThat;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.DefaultApplicationArguments;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.client.TestRestTemplate;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.*;
-import org.springframework.security.oauth2.jwt.*;
-import org.springframework.security.oauth2.jose.jws.MacAlgorithm;
-import com.gdrn.identity.application.port.AccountStore;
-import com.gdrn.identity.domain.*;
-import com.gdrn.identity.infrastructure.configuration.DemoAccountBootstrap;
-import org.springframework.boot.DefaultApplicationArguments;
 import org.springframework.core.env.ConfigurableEnvironment;
 import org.springframework.core.env.MapPropertySource;
-import java.time.Instant;
-import java.util.*;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpMethod;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.security.oauth2.jose.jws.MacAlgorithm;
+import org.springframework.security.oauth2.jwt.JwsHeader;
+import org.springframework.security.oauth2.jwt.JwtClaimsSet;
+import org.springframework.security.oauth2.jwt.JwtEncoder;
+import org.springframework.security.oauth2.jwt.JwtEncoderParameters;
+import org.springframework.security.oauth2.jwt.NimbusJwtEncoder;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
@@ -26,8 +39,11 @@ import org.testcontainers.junit.jupiter.Testcontainers;
 import org.testcontainers.utility.DockerImageName;
 
 import com.fasterxml.jackson.databind.JsonNode;
-
-import static org.assertj.core.api.Assertions.assertThat;
+import com.gdrn.identity.application.port.AccountStore;
+import com.gdrn.identity.domain.EmailAddress;
+import com.gdrn.identity.domain.Role;
+import com.gdrn.identity.domain.User;
+import com.gdrn.identity.infrastructure.configuration.DemoAccountBootstrap;
 
 @Testcontainers
 @ActiveProfiles({"test", "demo"})

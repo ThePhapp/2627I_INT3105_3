@@ -4,6 +4,11 @@ P01 status: E01/E02 đã implemented, S01 dùng API thật; các operation/scree
 vẫn planned. YAML dưới đây giữ baseline đích P00, không đại diện runtime Swagger.
 Runtime chỉ công bố slice Identity; xem [handoff P01](../handoffs/P01.md).
 
+B1 update 09/10/2026: E07–E09 adapters có tests, nhưng chưa tích hợp migration và
+central route policy. [B1 adapter OpenAPI](b1-adapter-contract.json) mô tả chính xác
+phần đã viết; **không phải runtime Swagger đã mở**. E08 radius vẫn B2, hiện nhận
+lat/lon/radiusMeters sẽ bị 400 trong adapter. Xem [handoff B1](../handoffs/B1.md).
+
 Ngày chốt thiết kế: 08/10/2026. **Planned, chưa implemented.** Chuẩn máy đọc là
 [OpenAPI 3.0.3](phase1-contract.yaml); quy tắc có điều kiện dưới đây cũng là yêu cầu
 bắt buộc. Nếu cần đổi, cập nhật cả YAML, tài liệu và handoff, để producer/consumer

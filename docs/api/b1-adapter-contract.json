@@ -1,0 +1,1035 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "GDRN B1 Reporting adapter contract — integration pending",
+    "version": "1.0.0",
+    "description": "E07/E08/E09 adapter slice. Not yet reachable in production: C1/allocated migration and central route policy are pending. Spatial queries belong to B2; lat/lon/radiusMeters are rejected with 400 in B1."
+  },
+  "servers": [
+    {
+      "url": "/"
+    }
+  ],
+  "security": [
+    {
+      "bearerAuth": []
+    }
+  ],
+  "paths": {
+    "/api/reports": {
+      "post": {
+        "operationId": "E07",
+        "summary": "E07 POST /api/reports",
+        "tags": [
+          "B1"
+        ],
+        "description": "PENDING. reporterId from authenticated principal, not client. No automatic disaster link.",
+        "x-owner": "Person 2",
+        "x-task": "B1",
+        "x-roles": [
+          "CITIZEN"
+        ],
+        "x-consumers": [
+          "S02"
+        ],
+        "x-status": "planned",
+        "responses": {
+          "201": {
+            "description": "Success.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Report"
+                },
+                "example": {
+                  "id": "00000000-0000-4000-8000-000000000005",
+                  "reporterId": "00000000-0000-4000-8000-000000000001",
+                  "type": "FLOOD",
+                  "description": "Water rising near the entrance",
+                  "latitude": 21.028,
+                  "longitude": 105.834,
+                  "status": "PENDING",
+                  "createdAt": "2026-10-08T03:00:00Z",
+                  "updatedAt": "2026-10-08T03:00:00Z"
+                }
+              }
+            },
+            "headers": {
+              "Cache-Control": {
+                "schema": {
+                  "type": "string",
+                  "enum": [
+                    "no-store"
+                  ]
+                },
+                "description": "Do not cache authentication or user data."
+              }
+            }
+          },
+          "400": {
+            "description": "VALIDATION_ERROR",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "timestamp": "2026-10-08T03:00:00Z",
+                  "status": 400,
+                  "code": "VALIDATION_ERROR",
+                  "message": "Request could not be completed.",
+                  "path": "/api/reports",
+                  "fieldErrors": [
+                    {
+                      "field": "body",
+                      "message": "Invalid request shape."
+                    }
+                  ]
+                }
+              }
+            },
+            "headers": {
+              "Cache-Control": {
+                "schema": {
+                  "type": "string",
+                  "enum": [
+                    "no-store"
+                  ]
+                },
+                "description": "Do not cache authentication or user data."
+              }
+            }
+          },
+          "401": {
+            "description": "UNAUTHENTICATED",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "timestamp": "2026-10-08T03:00:00Z",
+                  "status": 401,
+                  "code": "UNAUTHENTICATED",
+                  "message": "Request could not be completed.",
+                  "path": "/api/reports",
+                  "fieldErrors": []
+                }
+              }
+            },
+            "headers": {
+              "WWW-Authenticate": {
+                "schema": {
+                  "type": "string",
+                  "enum": [
+                    "Bearer"
+                  ]
+                },
+                "description": "Bearer challenge."
+              },
+              "Cache-Control": {
+                "schema": {
+                  "type": "string",
+                  "enum": [
+                    "no-store"
+                  ]
+                },
+                "description": "Do not cache authentication or user data."
+              }
+            }
+          },
+          "403": {
+            "description": "FORBIDDEN",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "timestamp": "2026-10-08T03:00:00Z",
+                  "status": 403,
+                  "code": "FORBIDDEN",
+                  "message": "Request could not be completed.",
+                  "path": "/api/reports",
+                  "fieldErrors": []
+                }
+              }
+            },
+            "headers": {
+              "Cache-Control": {
+                "schema": {
+                  "type": "string",
+                  "enum": [
+                    "no-store"
+                  ]
+                },
+                "description": "Do not cache authentication or user data."
+              }
+            }
+          },
+          "415": {
+            "description": "UNSUPPORTED_MEDIA_TYPE",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "timestamp": "2026-10-08T03:00:00Z",
+                  "status": 415,
+                  "code": "UNSUPPORTED_MEDIA_TYPE",
+                  "message": "Request could not be completed.",
+                  "path": "/api/reports",
+                  "fieldErrors": []
+                }
+              }
+            },
+            "headers": {
+              "Cache-Control": {
+                "schema": {
+                  "type": "string",
+                  "enum": [
+                    "no-store"
+                  ]
+                },
+                "description": "Do not cache authentication or user data."
+              }
+            }
+          },
+          "500": {
+            "description": "INTERNAL_ERROR",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "timestamp": "2026-10-08T03:00:00Z",
+                  "status": 500,
+                  "code": "INTERNAL_ERROR",
+                  "message": "Request could not be completed.",
+                  "path": "/api/reports",
+                  "fieldErrors": []
+                }
+              }
+            },
+            "headers": {
+              "Cache-Control": {
+                "schema": {
+                  "type": "string",
+                  "enum": [
+                    "no-store"
+                  ]
+                },
+                "description": "Do not cache authentication or user data."
+              }
+            }
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateReportRequest"
+              },
+              "example": {
+                "type": "FLOOD",
+                "description": "Water rising near the entrance",
+                "latitude": 21.028,
+                "longitude": 105.834
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "operationId": "E08",
+        "summary": "E08 GET /api/reports",
+        "tags": [
+          "B1/B2"
+        ],
+        "description": "B1 supports page, size, sort, status, type, disasterId. Spatial filters are not implemented and return 400. All persisted B1 reports are PENDING and unlinked; VERIFIED/REJECTED or disasterId filters return empty pages through DB predicates.",
+        "x-owner": "Person 2",
+        "x-task": "B1/B2",
+        "x-roles": [
+          "CITIZEN",
+          "AUTHORITY"
+        ],
+        "x-consumers": [
+          "S03",
+          "S04",
+          "S06"
+        ],
+        "x-status": "planned",
+        "responses": {
+          "200": {
+            "description": "Success.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReportPage"
+                },
+                "example": {
+                  "items": [
+                    {
+                      "id": "00000000-0000-4000-8000-000000000005",
+                      "reporterId": "00000000-0000-4000-8000-000000000001",
+                      "type": "FLOOD",
+                      "description": "Water rising near the entrance",
+                      "latitude": 21.028,
+                      "longitude": 105.834,
+                      "status": "PENDING",
+                      "createdAt": "2026-10-08T03:00:00Z",
+                      "updatedAt": "2026-10-08T03:00:00Z"
+                    }
+                  ],
+                  "page": 0,
+                  "size": 20,
+                  "totalElements": 1,
+                  "totalPages": 1
+                }
+              }
+            },
+            "headers": {
+              "Cache-Control": {
+                "schema": {
+                  "type": "string",
+                  "enum": [
+                    "no-store"
+                  ]
+                },
+                "description": "Do not cache authentication or user data."
+              }
+            }
+          },
+          "400": {
+            "description": "VALIDATION_ERROR",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "timestamp": "2026-10-08T03:00:00Z",
+                  "status": 400,
+                  "code": "VALIDATION_ERROR",
+                  "message": "Request could not be completed.",
+                  "path": "/api/reports",
+                  "fieldErrors": [
+                    {
+                      "field": "body",
+                      "message": "Invalid request shape."
+                    }
+                  ]
+                }
+              }
+            },
+            "headers": {
+              "Cache-Control": {
+                "schema": {
+                  "type": "string",
+                  "enum": [
+                    "no-store"
+                  ]
+                },
+                "description": "Do not cache authentication or user data."
+              }
+            }
+          },
+          "401": {
+            "description": "UNAUTHENTICATED",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "timestamp": "2026-10-08T03:00:00Z",
+                  "status": 401,
+                  "code": "UNAUTHENTICATED",
+                  "message": "Request could not be completed.",
+                  "path": "/api/reports",
+                  "fieldErrors": []
+                }
+              }
+            },
+            "headers": {
+              "WWW-Authenticate": {
+                "schema": {
+                  "type": "string",
+                  "enum": [
+                    "Bearer"
+                  ]
+                },
+                "description": "Bearer challenge."
+              },
+              "Cache-Control": {
+                "schema": {
+                  "type": "string",
+                  "enum": [
+                    "no-store"
+                  ]
+                },
+                "description": "Do not cache authentication or user data."
+              }
+            }
+          },
+          "403": {
+            "description": "FORBIDDEN",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "timestamp": "2026-10-08T03:00:00Z",
+                  "status": 403,
+                  "code": "FORBIDDEN",
+                  "message": "Request could not be completed.",
+                  "path": "/api/reports",
+                  "fieldErrors": []
+                }
+              }
+            },
+            "headers": {
+              "Cache-Control": {
+                "schema": {
+                  "type": "string",
+                  "enum": [
+                    "no-store"
+                  ]
+                },
+                "description": "Do not cache authentication or user data."
+              }
+            }
+          },
+          "500": {
+            "description": "INTERNAL_ERROR",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "timestamp": "2026-10-08T03:00:00Z",
+                  "status": 500,
+                  "code": "INTERNAL_ERROR",
+                  "message": "Request could not be completed.",
+                  "path": "/api/reports",
+                  "fieldErrors": []
+                }
+              }
+            },
+            "headers": {
+              "Cache-Control": {
+                "schema": {
+                  "type": "string",
+                  "enum": [
+                    "no-store"
+                  ]
+                },
+                "description": "Do not cache authentication or user data."
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "page",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 1000000,
+              "default": 0
+            },
+            "description": "page"
+          },
+          {
+            "name": "size",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100,
+              "default": 20
+            },
+            "description": "size"
+          },
+          {
+            "name": "sort",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "createdAt,desc",
+                "createdAt,asc"
+              ],
+              "default": "createdAt,desc"
+            },
+            "description": "One sort only. Always append id ASC as tie-breaker. Mission createdAt sort means assignedAt."
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "$ref": "#/components/schemas/ReportStatus"
+            },
+            "description": "status"
+          },
+          {
+            "name": "type",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "$ref": "#/components/schemas/DisasterType"
+            },
+            "description": "type"
+          },
+          {
+            "name": "disasterId",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "$ref": "#/components/schemas/Id"
+            },
+            "description": "disasterId"
+          }
+        ]
+      }
+    },
+    "/api/reports/{id}": {
+      "get": {
+        "operationId": "E09",
+        "summary": "E09 GET /api/reports/{id}",
+        "tags": [
+          "B1"
+        ],
+        "description": "CITIZEN owner only; other owner, missing or withdrawn => identical 404. Never calls Rescue; progress via E14?reportId=...",
+        "x-owner": "Person 2",
+        "x-task": "B1",
+        "x-roles": [
+          "CITIZEN",
+          "AUTHORITY"
+        ],
+        "x-consumers": [
+          "S03",
+          "S04",
+          "S06"
+        ],
+        "x-status": "planned",
+        "responses": {
+          "200": {
+            "description": "Success.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Report"
+                },
+                "example": {
+                  "id": "00000000-0000-4000-8000-000000000005",
+                  "reporterId": "00000000-0000-4000-8000-000000000001",
+                  "type": "FLOOD",
+                  "description": "Water rising near the entrance",
+                  "latitude": 21.028,
+                  "longitude": 105.834,
+                  "status": "PENDING",
+                  "createdAt": "2026-10-08T03:00:00Z",
+                  "updatedAt": "2026-10-08T03:00:00Z"
+                }
+              }
+            },
+            "headers": {
+              "Cache-Control": {
+                "schema": {
+                  "type": "string",
+                  "enum": [
+                    "no-store"
+                  ]
+                },
+                "description": "Do not cache authentication or user data."
+              }
+            }
+          },
+          "400": {
+            "description": "VALIDATION_ERROR",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "timestamp": "2026-10-08T03:00:00Z",
+                  "status": 400,
+                  "code": "VALIDATION_ERROR",
+                  "message": "Request could not be completed.",
+                  "path": "/api/reports/00000000-0000-4000-8000-000000000005",
+                  "fieldErrors": [
+                    {
+                      "field": "body",
+                      "message": "Invalid request shape."
+                    }
+                  ]
+                }
+              }
+            },
+            "headers": {
+              "Cache-Control": {
+                "schema": {
+                  "type": "string",
+                  "enum": [
+                    "no-store"
+                  ]
+                },
+                "description": "Do not cache authentication or user data."
+              }
+            }
+          },
+          "401": {
+            "description": "UNAUTHENTICATED",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "timestamp": "2026-10-08T03:00:00Z",
+                  "status": 401,
+                  "code": "UNAUTHENTICATED",
+                  "message": "Request could not be completed.",
+                  "path": "/api/reports/00000000-0000-4000-8000-000000000005",
+                  "fieldErrors": []
+                }
+              }
+            },
+            "headers": {
+              "WWW-Authenticate": {
+                "schema": {
+                  "type": "string",
+                  "enum": [
+                    "Bearer"
+                  ]
+                },
+                "description": "Bearer challenge."
+              },
+              "Cache-Control": {
+                "schema": {
+                  "type": "string",
+                  "enum": [
+                    "no-store"
+                  ]
+                },
+                "description": "Do not cache authentication or user data."
+              }
+            }
+          },
+          "403": {
+            "description": "FORBIDDEN",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "timestamp": "2026-10-08T03:00:00Z",
+                  "status": 403,
+                  "code": "FORBIDDEN",
+                  "message": "Request could not be completed.",
+                  "path": "/api/reports/00000000-0000-4000-8000-000000000005",
+                  "fieldErrors": []
+                }
+              }
+            },
+            "headers": {
+              "Cache-Control": {
+                "schema": {
+                  "type": "string",
+                  "enum": [
+                    "no-store"
+                  ]
+                },
+                "description": "Do not cache authentication or user data."
+              }
+            }
+          },
+          "404": {
+            "description": "NOT_FOUND",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "timestamp": "2026-10-08T03:00:00Z",
+                  "status": 404,
+                  "code": "NOT_FOUND",
+                  "message": "Request could not be completed.",
+                  "path": "/api/reports/00000000-0000-4000-8000-000000000005",
+                  "fieldErrors": []
+                }
+              }
+            },
+            "headers": {
+              "Cache-Control": {
+                "schema": {
+                  "type": "string",
+                  "enum": [
+                    "no-store"
+                  ]
+                },
+                "description": "Do not cache authentication or user data."
+              }
+            }
+          },
+          "500": {
+            "description": "INTERNAL_ERROR",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "timestamp": "2026-10-08T03:00:00Z",
+                  "status": 500,
+                  "code": "INTERNAL_ERROR",
+                  "message": "Request could not be completed.",
+                  "path": "/api/reports/00000000-0000-4000-8000-000000000005",
+                  "fieldErrors": []
+                }
+              }
+            },
+            "headers": {
+              "Cache-Control": {
+                "schema": {
+                  "type": "string",
+                  "enum": [
+                    "no-store"
+                  ]
+                },
+                "description": "Do not cache authentication or user data."
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/Id"
+            },
+            "description": "Resource UUID"
+          }
+        ]
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "bearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT"
+      }
+    },
+    "schemas": {
+      "ReportStatus": {
+        "type": "string",
+        "enum": [
+          "PENDING",
+          "VERIFIED",
+          "REJECTED"
+        ]
+      },
+      "Id": {
+        "type": "string",
+        "format": "uuid",
+        "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+        "description": "Canonical lowercase UUID; server-generated for new resources."
+      },
+      "DisasterType": {
+        "type": "string",
+        "enum": [
+          "EARTHQUAKE",
+          "FLOOD",
+          "TYPHOON",
+          "WILDFIRE",
+          "TSUNAMI"
+        ]
+      },
+      "Report": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "$ref": "#/components/schemas/Id"
+          },
+          "reporterId": {
+            "$ref": "#/components/schemas/Id"
+          },
+          "type": {
+            "$ref": "#/components/schemas/DisasterType"
+          },
+          "description": {
+            "$ref": "#/components/schemas/Description"
+          },
+          "latitude": {
+            "$ref": "#/components/schemas/Latitude"
+          },
+          "longitude": {
+            "$ref": "#/components/schemas/Longitude"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "PENDING"
+            ]
+          },
+          "createdAt": {
+            "$ref": "#/components/schemas/Timestamp"
+          },
+          "updatedAt": {
+            "$ref": "#/components/schemas/Timestamp"
+          }
+        },
+        "required": [
+          "id",
+          "reporterId",
+          "type",
+          "description",
+          "latitude",
+          "longitude",
+          "status",
+          "createdAt",
+          "updatedAt"
+        ],
+        "description": "B1 PENDING report; no verification, withdrawal, persistence or mission fields.",
+        "example": {
+          "id": "00000000-0000-4000-8000-000000000005",
+          "reporterId": "00000000-0000-4000-8000-000000000001",
+          "type": "FLOOD",
+          "description": "Water rising near the entrance",
+          "latitude": 21.028,
+          "longitude": 105.834,
+          "status": "PENDING",
+          "createdAt": "2026-10-08T03:00:00Z",
+          "updatedAt": "2026-10-08T03:00:00Z"
+        }
+      },
+      "CreateReportRequest": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "type": {
+            "$ref": "#/components/schemas/DisasterType"
+          },
+          "description": {
+            "$ref": "#/components/schemas/Description"
+          },
+          "latitude": {
+            "$ref": "#/components/schemas/Latitude"
+          },
+          "longitude": {
+            "$ref": "#/components/schemas/Longitude"
+          }
+        },
+        "required": [
+          "type",
+          "description",
+          "latitude",
+          "longitude"
+        ],
+        "example": {
+          "type": "FLOOD",
+          "description": "Water rising near the entrance",
+          "latitude": 21.028,
+          "longitude": 105.834
+        }
+      },
+      "ReportPage": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Report"
+            },
+            "maxItems": 100
+          },
+          "page": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 1000000
+          },
+          "size": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 100
+          },
+          "totalElements": {
+            "type": "integer",
+            "format": "int64",
+            "minimum": 0
+          },
+          "totalPages": {
+            "type": "integer",
+            "minimum": 0
+          }
+        },
+        "required": [
+          "items",
+          "page",
+          "size",
+          "totalElements",
+          "totalPages"
+        ],
+        "description": "Own PageResponse, never Spring Page. Counts after authorization and all filters, before pagination. totalPages=ceil(totalElements/size); empty total is 0 pages; page beyond end returns empty items, 200.",
+        "example": {
+          "items": [
+            {
+              "id": "00000000-0000-4000-8000-000000000005",
+              "reporterId": "00000000-0000-4000-8000-000000000001",
+              "type": "FLOOD",
+              "description": "Water rising near the entrance",
+              "latitude": 21.028,
+              "longitude": 105.834,
+              "status": "PENDING",
+              "createdAt": "2026-10-08T03:00:00Z",
+              "updatedAt": "2026-10-08T03:00:00Z"
+            }
+          ],
+          "page": 0,
+          "size": 20,
+          "totalElements": 1,
+          "totalPages": 1
+        }
+      },
+      "Error": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "timestamp": {
+            "$ref": "#/components/schemas/Timestamp"
+          },
+          "status": {
+            "type": "integer",
+            "enum": [
+              400,
+              401,
+              403,
+              404,
+              409,
+              415,
+              500
+            ]
+          },
+          "code": {
+            "type": "string",
+            "enum": [
+              "VALIDATION_ERROR",
+              "UNAUTHENTICATED",
+              "INVALID_CREDENTIALS",
+              "FORBIDDEN",
+              "NOT_FOUND",
+              "INVALID_TRANSITION",
+              "STALE_VERSION",
+              "DISASTER_NOT_ACTIVE",
+              "REPORT_NOT_VERIFIED",
+              "REPORT_ALREADY_ASSIGNED",
+              "TEAM_BUSY",
+              "UNSUPPORTED_MEDIA_TYPE",
+              "INTERNAL_ERROR"
+            ]
+          },
+          "message": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 500
+          },
+          "path": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 2048
+          },
+          "fieldErrors": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/FieldError"
+            },
+            "maxItems": 100
+          }
+        },
+        "required": [
+          "timestamp",
+          "status",
+          "code",
+          "message",
+          "path",
+          "fieldErrors"
+        ],
+        "description": "fieldErrors always present; [] except validation errors. path excludes query string. No stack trace, credentials or token.",
+        "example": {
+          "timestamp": "2026-10-08T03:00:00Z",
+          "status": 409,
+          "code": "TEAM_BUSY",
+          "message": "Team already has an active mission.",
+          "path": "/api/rescue-missions",
+          "fieldErrors": []
+        }
+      },
+      "Latitude": {
+        "type": "number",
+        "format": "double",
+        "minimum": -90,
+        "maximum": 90
+      },
+      "Longitude": {
+        "type": "number",
+        "format": "double",
+        "minimum": -180,
+        "maximum": 180
+      },
+      "FieldError": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "field": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 100
+          },
+          "message": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 500
+          }
+        },
+        "required": [
+          "field",
+          "message"
+        ],
+        "description": "field is body/query field name, id, or body for malformed JSON. Never include rejected values."
+      },
+      "Timestamp": {
+        "type": "string",
+        "format": "date-time",
+        "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(\\.\\d{1,9})?Z$",
+        "description": "ISO-8601 UTC, Z suffix, up to nanoseconds."
+      },
+      "Description": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 2000,
+        "pattern": "\\S",
+        "description": "Trim outer whitespace; plain text, no HTML rendering."
+      }
+    }
+  }
+}
