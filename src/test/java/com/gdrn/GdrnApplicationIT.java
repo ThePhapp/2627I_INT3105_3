@@ -15,6 +15,10 @@ import org.springframework.security.oauth2.jose.jws.MacAlgorithm;
 import com.gdrn.identity.application.port.AccountStore;
 import com.gdrn.identity.domain.*;
 import com.gdrn.identity.infrastructure.configuration.DemoAccountBootstrap;
+import com.gdrn.disaster.application.*;
+import com.gdrn.disaster.application.contract.*;
+import com.gdrn.disaster.application.port.DisasterRepository;
+import com.gdrn.disaster.domain.*;
 import org.springframework.boot.DefaultApplicationArguments;
 import org.springframework.core.env.ConfigurableEnvironment;
 import org.springframework.core.env.MapPropertySource;
@@ -77,6 +81,8 @@ class GdrnApplicationIT {
     @Autowired DemoAccountBootstrap bootstrap;
     @Autowired ConfigurableEnvironment environment;
     @Autowired ConfigurableApplicationContext context;
+    @Autowired DisasterRepository disasters;
+    @Autowired DisasterQuery disasterQuery;
 
     @Test
     void context_starts_with_flyway_and_postgis() {
@@ -84,6 +90,7 @@ class GdrnApplicationIT {
         assertThat(jdbc.queryForObject("SELECT count(*) FROM flyway_schema_history WHERE version = '1' AND success",
                 Integer.class)).isEqualTo(1);
         assertThat(jdbc.queryForObject("SELECT count(*) FROM flyway_schema_history WHERE version = '2' AND success", Integer.class)).isEqualTo(1);
+        assertThat(jdbc.queryForObject("SELECT count(*) FROM flyway_schema_history WHERE version = '3' AND success", Integer.class)).isEqualTo(1);
         assertThat(jdbc.queryForObject("SELECT ST_Distance(ST_Point(0, 0), ST_Point(3, 4))",
                 Double.class)).isEqualTo(5.0);
     }
@@ -96,15 +103,48 @@ class GdrnApplicationIT {
         assertThat(response.getBody().has("components")).isFalse();
     }
 
-    @Test void migrationUpgradesV1WithoutProvisioningAnyAccounts() {
+    @Test void migrationUpgradesV2ToV3WithoutProvisioningAccountsOrDisasters() {
         var base = org.flywaydb.core.Flyway.configure().dataSource(DATABASE.getJdbcUrl(), DATABASE.getUsername(), DATABASE.getPassword())
-                .schemas("identity_upgrade_check").target("1").load();
+                .schemas("disaster_upgrade_check").target("2").load();
         base.migrate();
         var upgrade = org.flywaydb.core.Flyway.configure().dataSource(DATABASE.getJdbcUrl(), DATABASE.getUsername(), DATABASE.getPassword())
-                .schemas("identity_upgrade_check").load();
+                .schemas("disaster_upgrade_check").load();
         assertThat(upgrade.migrate().migrationsExecuted).isEqualTo(1);
-        assertThat(jdbc.queryForObject("select count(*) from identity_upgrade_check.identity_users", Integer.class)).isZero();
-        assertThat(jdbc.queryForObject("select count(*) from identity_upgrade_check.identity_credentials", Integer.class)).isZero();
+        assertThat(jdbc.queryForObject("select count(*) from disaster_upgrade_check.identity_users", Integer.class)).isZero();
+        assertThat(jdbc.queryForObject("select count(*) from disaster_upgrade_check.identity_credentials", Integer.class)).isZero();
+        assertThat(jdbc.queryForObject("select count(*) from disaster_upgrade_check.disasters", Integer.class)).isZero();
+    }
+
+    @Test void disasterAdapterPersistsFiltersPagesPublishesAndRejectsStaleUpdate() {
+        Instant now = Instant.parse("2026-10-09T02:00:00Z");
+        UUID activeId = UUID.randomUUID();
+        UUID resolvedId = UUID.randomUUID();
+        disasters.add(Disaster.create(activeId, "Active flood", DisasterType.FLOOD, Severity.HIGH,
+                "Training active", 21.028, 105.834, now));
+        var resolved = Disaster.create(resolvedId, "Resolved fire", DisasterType.WILDFIRE, Severity.MODERATE,
+                "Training resolved", 10, 106, now.plusSeconds(1)).update(0,
+                new Disaster.Change(Optional.empty(), Optional.empty(), Optional.empty(), Optional.empty(),
+                        Optional.empty(), Optional.empty(), Optional.of(DisasterStatus.RESOLVED)), now.plusSeconds(2));
+        disasters.add(resolved);
+
+        var page = disasters.search(new DisasterSearch(0, 1, DisasterSearch.Sort.CREATED_AT_DESC,
+                Optional.empty(), Optional.empty()));
+        assertThat(page.items()).extracting(Disaster::id).containsExactly(resolvedId);
+        assertThat(page.totalElements()).isEqualTo(2);
+        assertThat(page.totalPages()).isEqualTo(2);
+        assertThat(disasters.search(new DisasterSearch(0, 20, DisasterSearch.Sort.CREATED_AT_ASC,
+                Optional.of(DisasterStatus.ACTIVE), Optional.of(DisasterType.FLOOD))).items())
+                .extracting(Disaster::id).containsExactly(activeId);
+        assertThat(disasterQuery.findByIds(Set.of(activeId, resolvedId, UUID.randomUUID())))
+                .containsOnlyKeys(activeId, resolvedId);
+        assertThat(disasterQuery.findById(resolvedId).orElseThrow().status()).isEqualTo(DisasterState.RESOLVED);
+
+        var current = disasters.findById(activeId).orElseThrow();
+        var changed = current.update(0, new Disaster.Change(Optional.of("Updated flood"), Optional.empty(),
+                Optional.empty(), Optional.empty(), Optional.empty(), Optional.empty(), Optional.empty()), now.plusSeconds(3));
+        assertThat(disasters.update(changed, 0)).isTrue();
+        assertThat(disasters.update(changed, 0)).isFalse();
+        assertThat(disasters.findById(activeId).orElseThrow().name()).isEqualTo("Updated flood");
     }
 
     @Test
