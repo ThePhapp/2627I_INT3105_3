@@ -4,8 +4,8 @@
 
 A university Software Architecture project exploring disaster response coordination.
 Phase 1 uses a **Modular Monolith + DDD + Hexagonal/Clean Architecture**. This repository
-currently contains the foundation plus P01 Identity authentication and a login SPA.
-The complete disaster response flow remains planned.
+currently contains the foundation, P01 Identity authentication/login SPA and the C1
+Disaster backend/operations screen. The complete response flow remains planned.
 
 **Hướng dẫn cho máy mới:** [Cài đặt và chạy sau khi clone repo (tiếng Việt)](docs/HUONG_DAN_CAI_DAT_VA_CHAY.md).
 
@@ -44,17 +44,20 @@ và [bộ 16 prompt chia theo người, có thứ tự phụ thuộc](docs/PROMP
 [tiến độ](docs/phase1-progress.md), [handoff P00](docs/handoffs/P00.md).
 MVP ba tuần giới hạn Identity/Disaster/Reporting/Rescue và SPA cơ bản. Resource/Alert,
 Geo risk, RescueRequest riêng và các API lớn hơn trong context dài hạn là backlog.
-**P01 implemented:** E01/E02, JWT memory-only (reload cần login lại), demo accounts
-và S01 login thật. Xem [cách chạy P01](docs/P01_LOCAL.md) và [handoff P01](docs/handoffs/P01.md).
-Các API/UI module khác vẫn planned.
+**P01 implemented:** E01/E02, JWT memory-only, demo accounts và S01 login thật.
+**C1 implemented:** E03–E06, DisasterQuery, migration V3 và S05 tại
+`/operations/disasters`. Xem [cách chạy P01](docs/P01_LOCAL.md),
+[handoff P01](docs/handoffs/P01.md) và [handoff C1](docs/handoffs/C1.md).
 
 ## CURRENTLY IMPLEMENTED
 
 - One Java 21 Spring Boot application with Maven Wrapper.
 - Plain Java Identity `User`, `EmailAddress`, `Role` and their unit tests; reconstitution/provisioning preserve existing roles.
 - PostgreSQL/PostGIS infrastructure, Flyway extension migration and JPA configuration.
-- JWT login/me, BCrypt credentials, controlled idempotent demo bootstrap; Swagger exposes E01/E02 only.
+- JWT login/me, BCrypt credentials, controlled idempotent demo bootstrap.
 - React/TypeScript/Vite login, memory-only session and feature route registration; Node 22.14.0/lockfile/CI checks.
+- Disaster ACTIVE→RESOLVED domain, E03–E06, JPA/Flyway V3 and published DisasterQuery.
+- Authority S05 list/filter/page/detail/create/edit/resolve screen using the real API.
 - ArchUnit boundary rules and real PostGIS/HTTP integration tests using Testcontainers.
 - Database-aware readiness, independent liveness and real database outage/recovery tests.
 - PowerShell lifecycle/smoke scripts, Docker/Compose, GitHub Actions runtime checks and ADRs.
@@ -72,8 +75,8 @@ Các API/UI module khác vẫn planned.
 | geo                     | Geographic operations and spatial risk functionality               |
 | shared                  | Carefully selected technical concerns (configuration exists today) |
 
-Identity login/me, user/credential tables and the login SPA exist. Disaster/Reporting/Rescue
-APIs and screens, user administration, domain events and benchmarks remain future work.
+Identity and Disaster APIs/persistence plus S01/S05 exist. Reporting/Rescue APIs and
+screens, user administration, domain events and benchmarks remain future work.
 The original [project context](GDRN_CODEX_PROJECT_CONTEXT.md) describes the eventual
 Phase 1 scope; it is not a list of implemented features.
 
@@ -183,7 +186,8 @@ profile requires explicit connection configuration. `application-local.yml` supp
 a host URL default; `application-test.yml` is on the test classpath only and tests
 override connection values from an isolated container.
 
-Flyway runs at startup: V1 enables PostGIS; V2 creates Identity users and credentials.
+Flyway runs at startup: V1 enables PostGIS; V2 creates Identity users and credentials;
+V3 creates Disaster storage, constraints and indexes.
 Migrations contain no demo accounts or secrets. PostGIS extension objects and Flyway
 history are technical metadata. Hibernate
 uses `ddl-auto: validate`; future schema changes must use migrations following:
@@ -233,8 +237,8 @@ verification if this occurs; CI and Docker builds use isolated output directorie
 - OpenAPI JSON: <http://localhost:8080/v3/api-docs>
 
 These GET endpoints are public for development; health details are hidden. OpenAPI
-exposes exactly POST `/api/auth/login` and GET `/api/auth/me`. Login is public; me
-requires CITIZEN/AUTHORITY Bearer authentication. All future business APIs remain
+exposes E01–E06. Login is public; me and Disaster reads require CITIZEN/AUTHORITY
+Bearer authentication; Disaster writes require AUTHORITY. Other business APIs remain
 denied. No generated user, Basic/form login, refresh or registration endpoint exists.
 All app profiles require `JWT_SECRET_BASE64`; demo credentials are environment-only,
 as described in [P01 setup](docs/P01_LOCAL.md).
@@ -258,5 +262,5 @@ external brokers, separate databases per module and production cloud infrastruct
 Phase 2 may consider selected improvements only after benchmarks identify a concrete
 quality-attribute problem, with an ADR and comparable measurements.
 
-Next after P01 review/merge: **B1/C1 and the planned A1/A2 follow-ups**.
-They have not been started by P01. Frontend production Docker/proxy is still A2.
+Next after C1 review/merge: **B1/B2 and the planned A1/A2 follow-ups**. Frontend
+production Docker/proxy is still A2.

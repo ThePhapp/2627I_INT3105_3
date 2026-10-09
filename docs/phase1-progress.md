@@ -1,8 +1,8 @@
 # Tiến độ Pha 1
 
-Cập nhật 08/10/2026; task table khởi tạo TODO, P00 và P01 đã hoàn tất phạm vi task.
+Cập nhật 09/10/2026; P00, P01 và C1 đã hoàn tất phạm vi task.
 **DONE không đồng nghĩa đã review/merge** hay toàn bộ 15 APIs/6 screens đã implemented.
-P01 chỉ có E01/E02/S01; các task sau vẫn TODO. ADR 005 ghi rõ phần đã triển khai.
+Runtime hiện có E01–E06, S01 và S05. ADR 005 ghi rõ phần đã triển khai.
 Xem [P00 handoff](handoffs/P00.md) và [kế hoạch/dependencies](PROMPTS_PHA_1_4_NGUOI.md).
 
 **Bổ sung 09/10/2026 — F00 nền tảng chạy được:** hoàn tất readiness/liveness,
@@ -17,7 +17,7 @@ tích hợp trong handoff F00; không chuyển các task nghiệp vụ tiếp th
 | P00 | 1; cả nhóm review | Repo nền | DONE | OpenAPI + module contracts + ADR 005; validation trong handoff; chờ review/merge |
 | P01 | 1 | P00 | DONE | [Handoff](handoffs/P01.md): E01/E02/S01; đã merge main qua PR #1 (`e4b449b`); kiểm tra tích hợp F00: 30 backend + 10 frontend tests pass |
 | B1 | 2 | P01 | TODO | Report tạo/xem/ownership; migration chờ Disaster |
-| C1 | 3 | P01 | TODO | Disaster backend + S05 |
+| C1 | 3 | P01 | DONE | [Handoff](handoffs/C1.md): E03–E06/S05, V3 và DisasterQuery; 40 backend + 15 frontend tests, 4 browser E2E pass |
 | B2 | 2 | B1, C1 | TODO | Verify/withdraw/spatial, ReportingQuery |
 | D1 | 4 | B2, C1 | TODO | Rescue backend/DB race protection |
 | B3 | 2 | B1; B2/D1 để hoàn tất | TODO | S02/S03 |
