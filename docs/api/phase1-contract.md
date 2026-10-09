@@ -1,5 +1,9 @@
 # Hợp đồng HTTP/UI Pha 1 — P00
 
+P01 status: E01/E02 đã implemented, S01 dùng API thật; các operation/screen còn lại
+vẫn planned. YAML dưới đây giữ baseline đích P00, không đại diện runtime Swagger.
+Runtime chỉ công bố slice Identity; xem [handoff P01](../handoffs/P01.md).
+
 Ngày chốt thiết kế: 08/10/2026. **Planned, chưa implemented.** Chuẩn máy đọc là
 [OpenAPI 3.0.3](phase1-contract.yaml); quy tắc có điều kiện dưới đây cũng là yêu cầu
 bắt buộc. Nếu cần đổi, cập nhật cả YAML, tài liệu và handoff, để producer/consumer

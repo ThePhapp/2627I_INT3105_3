@@ -4,9 +4,16 @@
 
 A university Software Architecture project exploring disaster response coordination.
 Phase 1 uses a **Modular Monolith + DDD + Hexagonal/Clean Architecture**. This repository
-currently contains the bootstrap foundation, not a functioning disaster response product.
+currently contains the foundation plus P01 Identity authentication and a login SPA.
+The complete disaster response flow remains planned.
 
 **Hướng dẫn cho máy mới:** [Cài đặt và chạy sau khi clone repo (tiếng Việt)](docs/HUONG_DAN_CAI_DAT_VA_CHAY.md).
+
+**Chạy local P01 trên Windows:** `powershell -NoProfile -ExecutionPolicy Bypass -File scripts/local.ps1 -Action setup`,
+sau đó cùng lệnh với `-Action start`. Frontend ở `http://127.0.0.1:5173/login`;
+backend dùng `APP_PORT` trong `.env`. PostgreSQL/PostGIS lưu dữ liệu trong named volume
+của Compose. Tài khoản đăng nhập nằm trong `.env`, không cần tạo SQL thủ công.
+Xem [start/stop và database local](docs/P01_LOCAL.md#chạy-local-lâu-dài-trên-windows).
 
 **Kế hoạch triển khai tiếp theo:** [Pha 1 MVP — 4 người / 3 tuần](docs/KE_HOACH_PHA_1_3_TUAN.md)
 và [bộ 16 prompt chia theo người, có thứ tự phụ thuộc](docs/PROMPTS_PHA_1_4_NGUOI.md).
@@ -18,14 +25,17 @@ và [bộ 16 prompt chia theo người, có thứ tự phụ thuộc](docs/PROMP
 [tiến độ](docs/phase1-progress.md), [handoff P00](docs/handoffs/P00.md).
 MVP ba tuần giới hạn Identity/Disaster/Reporting/Rescue và SPA cơ bản. Resource/Alert,
 Geo risk, RescueRequest riêng và các API lớn hơn trong context dài hạn là backlog.
-JWT memory-only (reload cần login lại) và frontend là lựa chọn dự kiến, chưa chạy.
+**P01 implemented:** E01/E02, JWT memory-only (reload cần login lại), demo accounts
+và S01 login thật. Xem [cách chạy P01](docs/P01_LOCAL.md) và [handoff P01](docs/handoffs/P01.md).
+Các API/UI module khác vẫn planned.
 
 ## CURRENTLY IMPLEMENTED
 
 - One Java 21 Spring Boot application with Maven Wrapper.
-- Plain Java Identity `User`, `EmailAddress`, `Role` and their unit tests; no login yet.
+- Plain Java Identity `User`, `EmailAddress`, `Role` and their unit tests; reconstitution/provisioning preserve existing roles.
 - PostgreSQL/PostGIS infrastructure, Flyway extension migration and JPA configuration.
-- Spring Security technical-endpoint policy, Actuator health and empty OpenAPI/Swagger.
+- JWT login/me, BCrypt credentials, controlled idempotent demo bootstrap; Swagger exposes E01/E02 only.
+- React/TypeScript/Vite login, memory-only session and feature route registration; Node 22.14.0/lockfile/CI checks.
 - ArchUnit boundary rules and real PostGIS/HTTP integration tests using Testcontainers.
 - Docker/Compose, GitHub Actions CI, architecture documentation and four initial ADRs.
 
@@ -42,8 +52,8 @@ JWT memory-only (reload cần login lại) và frontend là lựa chọn dự ki
 | geo                     | Geographic operations and spatial risk functionality               |
 | shared                  | Carefully selected technical concerns (configuration exists today) |
 
-No business controllers, services, repositories, entities, tables or REST operations
-exist. Login, JWT, role management, domain events and benchmarks are future work.
+Identity login/me, user/credential tables and the login SPA exist. Disaster/Reporting/Rescue
+APIs and screens, user administration, domain events and benchmarks remain future work.
 The original [project context](GDRN_CODEX_PROJECT_CONTEXT.md) describes the eventual
 Phase 1 scope; it is not a list of implemented features.
 
@@ -132,6 +142,10 @@ starting a host backend on the same port. `SERVER_PORT` overrides the host HTTP 
 
 ## Environment and database
 
+P01 additionally requires `JWT_SECRET_BASE64` and, when using profile `demo`, the six
+`DEMO_*_EMAIL`/`DEMO_*_PASSWORD` values in `.env.example`. Configure these before
+starting the backend; follow [P01 local instructions](docs/P01_LOCAL.md).
+
 | Variable                     | Purpose                                                      |
 | ---------------------------- | ------------------------------------------------------------ |
 | `POSTGRES_DB`                | Compose database name; required                              |
@@ -148,8 +162,9 @@ profile requires explicit connection configuration. `application-local.yml` supp
 a host URL default; `application-test.yml` is on the test classpath only and tests
 override connection values from an isolated container.
 
-Flyway runs at startup. Its only migration enables PostGIS; there are no business
-tables. PostGIS extension objects and Flyway history are technical metadata. Hibernate
+Flyway runs at startup: V1 enables PostGIS; V2 creates Identity users and credentials.
+Migrations contain no demo accounts or secrets. PostGIS extension objects and Flyway
+history are technical metadata. Hibernate
 uses `ddl-auto: validate`; future schema changes must use migrations following:
 **Requirements → Domain Model → Persistence Model → Database Schema → Flyway Migration**.
 
@@ -194,8 +209,11 @@ verification if this occurs; CI and Docker builds use isolated output directorie
 - OpenAPI JSON: <http://localhost:8080/v3/api-docs>
 
 These GET endpoints are public for development; health details are hidden. OpenAPI
-has project metadata and no business operations. All other requests are denied.
-There is no generated login user, password login or JWT flow.
+exposes exactly POST `/api/auth/login` and GET `/api/auth/me`. Login is public; me
+requires CITIZEN/AUTHORITY Bearer authentication. All future business APIs remain
+denied. No generated user, Basic/form login, refresh or registration endpoint exists.
+All app profiles require `JWT_SECRET_BASE64`; demo credentials are environment-only,
+as described in [P01 setup](docs/P01_LOCAL.md).
 
 ## Architecture rules and scope
 
@@ -214,5 +232,5 @@ external brokers, separate databases per module and production cloud infrastruct
 Phase 2 may consider selected improvements only after benchmarks identify a concrete
 quality-attribute problem, with an ADR and comparable measurements.
 
-Next development stage after P00 review/merge: **P01 Identity & Access and SPA foundation**.
-That stage has not been implemented here; P00 does not start P01.
+Next after P01 review/merge: **B1/C1 and the planned A1/A2 follow-ups**.
+They have not been started by P01. Frontend production Docker/proxy is still A2.

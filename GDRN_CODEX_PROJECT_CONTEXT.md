@@ -1,5 +1,10 @@
 # GDRN — Codex Project Context & Engineering Specification
 
+> **P01 update — 08/10/2026:** E01/E02/S01 đã triển khai trên nhánh P01: JWT thật,
+> user/credential persistence, demo profile và SPA login. Các đoạn P00 bên dưới là
+> trạng thái lịch sử tại P00; phần dài hạn vẫn backlog. Xem
+> [handoff P01](docs/handoffs/P01.md), [local setup](docs/P01_LOCAL.md).
+
 > **Scope note P00 — 08/10/2026:** Phần bên dưới giữ nguyên bối cảnh dài hạn/backlog,
 > không phải danh sách đã implemented. Scope thực thi hiện tại theo
 > [kế hoạch MVP 4 người / 3 tuần](docs/KE_HOACH_PHA_1_3_TUAN.md),
