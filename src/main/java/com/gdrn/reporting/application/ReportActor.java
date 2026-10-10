@@ -16,6 +16,10 @@ public record ReportActor(UUID id, Role role) {
         if (role != Role.CITIZEN) throw new ReportAccessDenied();
     }
 
+    public void requireAuthority() {
+        if (role != Role.AUTHORITY) throw new ReportAccessDenied();
+    }
+
     public boolean canRead(UUID reporterId) {
         return role == Role.AUTHORITY || id.equals(reporterId);
     }
