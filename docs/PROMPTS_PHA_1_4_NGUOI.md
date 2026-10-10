@@ -1,4 +1,4 @@
-# Kế hoạch và bộ 16 prompt Pha 1 MVP — 4 người / 3 tuần
+# Kế hoạch Pha 1 MVP — 16 task lõi + 3 checkpoint UI, 4 người / 3 tuần
 
 Đây là **kế hoạch triển khai duy nhất** của GDRN: scope, phân công, dependency,
 thứ tự task và tiêu chí hoàn thành đều tra tại file này. Không dùng bộ prompt nền
@@ -12,7 +12,16 @@ không tự đổi API hoặc migration đã áp dụng để khớp tài liệu
 
 Việc lưu prompt hay có commit từng phần không chứng minh task đã DONE. Đọc code,
 tests và handoff hiện tại trước khi thực thi; không chạy lại phần đã hoàn tất.
-Có 16 task chính, chỉ thực hiện task được giao, không tự chạy toàn bộ liên tiếp.
+Có 16 task lõi và 3 checkpoint UI đã review. Chỉ thực hiện task được giao, không tự
+chạy toàn bộ liên tiếp. Prompt UI01 nằm trong phụ lục
+`docs/design/GDRN_UI01_PROMPTS.md` nhưng chỉ được chạy theo dependency và trạng thái
+catalog tại file này; phụ lục không phải kế hoạch thay thế.
+
+**Trạng thái nền ngày 10/10/2026:** P00, P01, B1, C1 đã DONE và có evidence trong
+`docs/phase1-progress.md`; runtime có E01–E09, S01/S05 và migrations V1–V4. Không
+chạy lại bốn task này. Công việc mở tiếp theo là UI01-A và B2; chúng có thể chạy song
+song trên nhánh/clone riêng vì UI01-A chỉ sở hữu shared frontend + S01, còn B2 sở hữu
+Reporting backend/schema. UI01-C1 chỉ chạy sau UI01-A merge.
 
 ## Phạm vi, phân công và các mốc MVP
 
@@ -159,9 +168,9 @@ Frontend demo production được phục vụ cùng origin qua static server và
 
 | Người | Phần sở hữu | Review chéo | Prompt phụ trách |
 | --- | --- | --- | --- |
-| 1 — tích hợp + Identity | identity; shared technical config; frontend auth/layout/http/router; root config/CI | Người 3 | P00, P01, A1, A2, X1, A3 |
+| 1 — tích hợp + Identity | identity; shared technical config; frontend auth/layout/http/router; root config/CI | Người 3 | P00, P01, UI01-A, A1, A2, UI01-B, X1, A3 |
 | 2 — Reporting + Geo | reporting; frontend/features/reporting-citizen; E2E sau khi tích hợp | Người 4 | B1, B2, B3, X2 |
-| 3 — Disaster + UI duyệt | disaster; frontend/features/disaster và reporting-operations; tài liệu demo | Người 1 | C1, C2, C3 |
+| 3 — Disaster + UI duyệt | disaster; frontend/features/disaster và reporting-operations; tài liệu demo | Người 1 | C1, UI01-C1, C2, C3 |
 | 4 — Rescue + đo tải | rescue; frontend/features/rescue; benchmark scripts/results | Người 2 | D1, D2, D3 |
 
 **E10 chỉ người 2 viết backend; người 3 dùng E10 trên UI.** Người 4 không sửa repository
@@ -188,12 +197,12 @@ của tham chiếu ID và chiến lược toàn vẹn, không tự thêm SQL joi
 | D2 | P01 Identity + SPA nền | Chuẩn bị domain/test B1 từ contract | Chuẩn bị domain/test C1 từ contract | Thiết kế D1, rule và concurrency test plan | Không tự tạo security/router riêng |
 | D3 | Merge P01 | B1 backend gửi/xem | C1 backend Disaster | Domain Rescue; chờ B2 contract thực thi | Login thật, frontend khởi động |
 | D4 | Review/ghép routes theo handoff | B1 hoàn tất, bắt đầu B2 | C1 UI thật, merge trước B2 | D1 chuẩn bị persistence khi migration được cấp | API B1/C1 tích hợp |
-| D5 | Kiểm tra mốc tuần 1 | B3 phần gửi/xem; B2 rule verification | Bắt đầu C2 theo E10 đã thống nhất | D1 sau C1/B2 merge | UI gửi và xem báo cáo chạy thật |
-| D6 | A1 bảo vệ UI/API, review | B2 hoàn tất/merge | C2 UI duyệt | D1 backend + race tests | Report được duyệt từ UI |
-| D7 | A1, hỗ trợ conflict shared | B3 rút/lọc/validation | C2 hoàn tất, kiểm tra C1 | D1 merge | Backend đủ nghiệp vụ |
-| D8 | A2 Docker frontend + CI | B3 tiến độ sau D1 | Chuẩn bị C3 artifacts | D2 UI Rescue | Sáu màn hình ghép đủ routes |
-| D9 | X1 tích hợp | Sửa Reporting + chuẩn bị X2 | Sửa Disaster/Operations UI | D2 hoàn tất | Demo xuyên suốt lần 1 |
-| D10 | X1 chốt tích hợp | B3/X2 smoke | Rà luồng nghiệp vụ và quyền | D3 smoke đo tải, thử Kaggle | Đóng băng tính năng |
+| D5 | UI01-A shared design + S01 | B2 rule/DB; B3 phần E07–E09 sau UI01-A | Review UI01-A, chuẩn bị C2 | Thiết kế D1/race, chờ B2 | Design system merge; gửi/xem report tiến triển |
+| D6 | Hoàn tất UI01-A, bắt đầu A1 security | B2 hoàn tất/merge | UI01-C1 sau UI01-A; C2 sau B2 | D1 backend sau B2 | Report verify được; S01 có design system |
+| D7 | A1 security/shared behavior | B3 rút/lọc/validation | UI01-C1 + C2 | D1 race tests/merge | Backend nghiệp vụ đủ, S05 đồng nhất |
+| D8 | A2 Docker frontend + CI | B3 tiến độ mission sau D1 | C2 hoàn tất | D2 UI Rescue | Sáu màn hình ghép đủ routes |
+| D9 | UI01-B điều phối audit | Sửa Reporting UI theo audit | Sửa S04/S05 theo audit | D2 hoàn tất, sửa S06 | UI01-B đạt trước tích hợp |
+| D10 | X1 tích hợp/chốt | B3/X2 smoke | Rà luồng nghiệp vụ/quyền | D3 smoke, thử Kaggle | Demo xuyên suốt, đóng băng tính năng |
 | D11 | A2 hoàn tất, hỗ trợ E2E | X2 E2E thật | C3 kiến trúc/README/rubric | D3 workload + môi trường | CI/E2E và fixture ổn định |
 | D12 | Sửa vấn đề chung | Sửa lỗi + X2 | C3 rehearsal | D3 đo, lưu dữ liệu thô | Có số liệu benchmark thật |
 | D13 | Review bản ứng viên | Kiểm tra hai user/403/409 | Chốt C3 | Phân tích D3, nêu giới hạn | Release candidate |
@@ -206,15 +215,18 @@ Các prompt có thể trải qua nhiều ngày. Không chạy prompt tiếp theo
 ### 8. Thứ tự phụ thuộc của prompt
 
 ```text
-P00 → P01
-P01 → B1, C1, A1                         (có thể song song ở clone/nhánh riêng)
+P00 → P01 → B1 + C1                     (đã hoàn tất/merge)
 B1 + C1 → B2
-B1 → B3 phần gửi/xem; B2 + D1 → B3 hoàn tất
-C1 + B2 → C2
-B2 + C1 → D1 → D2
-P01 → A2; B3 + C2 + D2 + A1 + A2 → X1
+P01 + B1 + C1 → UI01-A                  (song song B2, file ownership khác)
+UI01-A → UI01-C1
+B1 + UI01-A → B3 phần gửi/xem; B2 + D1 → B3 hoàn tất
+C1 + B2 + UI01-A → C2
+B2 + C1 → D1 → D2; UI01-A → D2 phần giao diện
+UI01-A → A1, A2
+B3 + C2 + D2 + UI01-C1 → UI01-B
+UI01-B + A1 + A2 → X1
 X1 → X2, C3, D3                         (có thể song song)
-X2 + C3 + D3 → A3
+X2 + C3 + D3 + UI01-B → A3
 ```
 
 Trong thời gian chờ dependency, làm domain analysis, test cases, wireframe hoặc
@@ -303,8 +315,10 @@ không gắn nhãn hoàn thành bằng việc bỏ qua test hoặc đưa mock v�
 1. Mỗi người mở clone/nhánh riêng đã cập nhật code từ nhánh tích hợp.
 2. Kiểm tra các dependency trong bảng; phụ thuộc phải đã merge, không chỉ "người kia
    đang làm". Không chạy cả 4 người từ cùng một bootstrap chưa có contracts.
-3. Copy **nguyên khối text** của đúng ID vào coding agent. Mỗi khối yêu cầu đọc kế hoạch trong file này
-   cùng contracts và quy tắc chung bên dưới, nên không cần dán lại lịch sử chat.
+3. Copy **nguyên khối text** của đúng ID vào coding agent. Task lõi lấy prompt trong file này;
+   ba checkpoint UI01 lấy prompt trong `docs/design/GDRN_UI01_PROMPTS.md`. Mọi ID đều phải có
+   trong bảng catalog bên dưới và cùng áp dụng các contracts, dependency, ownership và quy tắc chung
+   của file này; không cần dán lại lịch sử chat.
 4. Chạy một prompt, đọc diff, xem test và demo rồi mới review/merge/chạy prompt tiếp.
 5. Khi cần tiếp tục một task dở, dùng mẫu tiếp tục ở cuối, không tạo lại cả module.
 
@@ -314,14 +328,17 @@ không gắn nhãn hoàn thành bằng việc bỏ qua test hoặc đưa mock v�
 | P01 | 1 | D2–D3 | P00 | Auth thật, SPA nền và login |
 | B1 | 2 | D3–D4 | P01 | Tạo/xem report và ownership |
 | C1 | 3 | D3–D5 | P01 | Disaster backend + UI |
+| UI01-A | 1 | D5–D6 | P00, P01, B1, C1 | Shared design system + cải tạo S01; prompt ở phụ lục UI01 |
 | B2 | 2 | D5–D6 | B1, C1 | Verify/delete/spatial + published report contract |
+| UI01-C1 | 3 | D6–D7 | UI01-A, C1 | Cải tạo S05 theo shared design system; prompt ở phụ lục UI01 |
 | D1 | 4 | D5–D7 | B2, C1 | Rescue backend + concurrency |
-| B3 | 2 | D5–D8, chia hai lượt | B1 cho phần đầu; B2/D1 để hoàn tất | Hai màn hình citizen |
-| C2 | 3 | D6–D7 | B2, C1 | UI duyệt báo cáo |
-| D2 | 4 | D8–D9 | D1 | UI điều phối |
-| A1 | 1 | D5–D7 | P01; cập nhật khi module merge | Security/shared frontend hoàn chỉnh |
-| A2 | 1 | D8–D11 | P01; hoàn tất sau các UI merge | Docker frontend và CI |
-| X1 | 1, owner hỗ trợ | D9–D10 | B3, C2, D2, A1, A2 chạy được | Luồng thật xuyên suốt |
+| B3 | 2 | D5–D8, chia hai lượt | B1 + UI01-A phần đầu; B2/D1 để hoàn tất | S02/S03 theo design system |
+| C2 | 3 | D6–D7 | B2, C1, UI01-A | S04 theo design system |
+| D2 | 4 | D8–D9 | D1, UI01-A | S06 theo design system |
+| A1 | 1 | D6–D8 | UI01-A; audit lại khi B2/D1 merge | Security + shared behavior; không làm lại design system |
+| A2 | 1 | D8–D11 | UI01-A; hoàn tất sau UI merge | Docker frontend và CI |
+| UI01-B | 1 điều phối + owners | D9 | B3, C2, D2, UI01-C1 | Audit 6 màn hình; gate trước X1; prompt ở phụ lục UI01 |
+| X1 | 1, owner hỗ trợ | D9–D10 | UI01-B, A1, A2 chạy được | Luồng thật xuyên suốt |
 | X2 | 2 | D10–D12 | X1 | Browser E2E và kiểm tra hồi quy |
 | D3 | 4 | Smoke D10, đo D11–D13 | X1 cho số đo chính thức | Script, raw benchmark, báo cáo |
 | C3 | 3 | D11–D13 | X1; thêm kết quả X2/D3 khi có | Kiến trúc, rubric, demo, hướng dẫn |
@@ -329,7 +346,11 @@ không gắn nhãn hoàn thành bằng việc bỏ qua test hoặc đưa mock v�
 
 B3/A1/A2/C3 được tiếp tục khi dependency mới sẵn sàng, không đánh dấu hoàn tất ở
 lượt đầu nếu còn phần bị chặn. Ngày thực hiện có thể dịch trong tuần nhưng giữ các
-cổng D5/D10/D15. Khi P01 chưa merge, người 2–4 chỉ chuẩn bị analysis/test cases/wireframe.
+cổng D5/D10/D15. P00/P01/B1/C1 đã hoàn tất; không dùng bảng để chạy lại lịch sử.
+
+Ba prompt UI01 nằm trong `docs/design/GDRN_UI01_PROMPTS.md` để giữ chi tiết thiết kế gần
+tài liệu UI. Chúng là phần thực thi của catalog này, không phải kế hoạch thứ hai. Không chạy
+UI01-A, UI01-C1 hoặc UI01-B nếu dependency/trạng thái trong bảng trên chưa cho phép.
 
 ## Quy tắc chung áp dụng cho mọi prompt
 
@@ -340,6 +361,9 @@ Các khối prompt dưới đây viện dẫn mục này như một phần nhi�
   repo hiện đã có domain Identity ban đầu và package-info, không được regenerate.
 - Scope MVP là 15 endpoint E01–E15 và 6 màn hình S01–S06 trong kế hoạch. Tính năng
   mới chỉ được triển khai bởi prompt sở hữu; không chạy sang prompt tiếp theo.
+- Với mọi task sửa frontend, đọc `docs/design/GDRN_UI_DESIGN_SYSTEM.md` và handoff
+  UI01 mới nhất. UI01-A là nền bắt buộc cho B3/C2/D2; UI01-C1 thuộc owner Disaster;
+  UI01-B là gate trước X1. Design system không được đổi API, route, role hoặc nghiệp vụ.
 - Không xóa hoặc ghi đè thay đổi chưa commit của người khác. Không tự push, merge,
   public repo, publish web hay deploy ra bên ngoài. Không tự sinh secret cố định.
 - Kiến trúc: domain plain Java; application orchestration + ports; HTTP ở API;
@@ -555,7 +579,8 @@ tự động điều phối. Chạy verify, handoff D1 cho D2/B3 và người 1.
 
 ```text
 Thực hiện B3; đọc AGENTS.md, kế hoạch MVP, bộ prompt/mục Quy tắc chung và contracts P00.
-Sở hữu frontend/src/features/reporting-citizen và tests. P01/B1 phải đã merge.
+Đọc thêm docs/design/GDRN_UI_DESIGN_SYSTEM.md và handoff UI01-A. Sở hữu
+frontend/src/features/reporting-citizen và tests. P01/B1/UI01-A phải đã merge.
 Nếu B2 hoặc D1 chưa merge, chỉ làm phần gửi/xem, ghi B3 IN_PROGRESS; không fake
 verification/withdraw/mission và không tuyên bố hoàn tất. Tiếp tục khi dependency có.
 
@@ -567,6 +592,9 @@ Reporting gọi ngược Rescue. Hiển thị report chưa có mission là trạ
 Giữ auth/token/client ở module chung, không lưu token hoặc báo cáo riêng vào storage
 không cần thiết. Clear private UI state khi logout/401; xử lý 404/409 và refresh.
 Không tạo map/upload/dashboard riêng. Đảm bảo dùng được trên màn hình hẹp và bàn phím.
+Tái sử dụng semantic tokens/shared components từ UI01-A, thể hiện Citizen flow ít áp
+lực nhận thức; không nhân bản theme, global CSS, API client hoặc tự thêm UI library.
+Kiểm tra 360/768/1280px, focus-visible, reduced motion và tương phản theo design spec.
 
 Test form invalid, submit success/failure, list empty/loading/error, withdraw conflict,
 mission status. Test doubles chỉ cho tests. Browser smoke với hai citizen nếu công cụ
@@ -581,7 +609,8 @@ mà không điều phối người 1.
 
 ```text
 Thực hiện C2; đọc AGENTS.md, kế hoạch MVP, bộ prompt/mục Quy tắc chung và contracts P00.
-Điều kiện P01/B2/C1 đã merge. Sở hữu frontend/src/features/reporting-operations.
+Đọc thêm docs/design/GDRN_UI_DESIGN_SYSTEM.md và handoff UI01-A. Điều kiện
+P01/B2/C1/UI01-A đã merge. Sở hữu frontend/src/features/reporting-operations.
 Không viết lại Reporting backend; mọi lỗi E08/E09/E10 bàn giao người 2 sửa.
 
 Implement S04 /operations/reports cho AUTHORITY: list phân trang/filter trạng thái,
@@ -594,6 +623,9 @@ không giữ UI trạng thái thành công giả. Không nút "tự duyệt" ho�
 Dùng shared client/layout/auth, route guard AUTHORITY nhưng backend vẫn là cổng quyền.
 Loading/error/empty/confirmation/responsive/keyboard labels đầy đủ. Không dùng userId
 từ input để vượt quyền, không tự thay response contract.
+Tổ chức theo Authority Operational Workbench, tái sử dụng shared tokens/components;
+không nhân bản theme/client hoặc tạo dashboard/KPI. Kiểm tra 360/768/1280px,
+focus-visible, reduced motion và tương phản theo design spec.
 Test approve/reject/invalid/filter/409/403, kiểm tra luồng thật citizen gửi → authority
 duyệt → citizen xem VERIFIED. Cập nhật handoff C2 và gửi router registration cho người 1.
 Run frontend checks + backend verify; báo rõ nếu công cụ browser không sẵn sàng.
@@ -603,7 +635,8 @@ Run frontend checks + backend verify; báo rõ nếu công cụ browser không s
 
 ```text
 Thực hiện D2; đọc AGENTS.md, kế hoạch MVP, bộ prompt/mục Quy tắc chung và contracts P00.
-Điều kiện D1/B2 đã merge. Sở hữu frontend/src/features/rescue và tests.
+Đọc thêm docs/design/GDRN_UI_DESIGN_SYSTEM.md và handoff UI01-A. Điều kiện
+D1/B2/UI01-A đã merge. Sở hữu frontend/src/features/rescue và tests.
 
 Implement S06 /operations/rescue: list missions phân trang/filter, panel tạo từ report
 VERIFIED và chọn team qua E12; liên kết từ UI duyệt/report detail nếu owner đã thống nhất.
@@ -619,14 +652,19 @@ Test form, valid transition, invalid action ẩn/disable, empty team list, faile
 không tạo hai active missions; citizen đọc được tiến độ qua UI B3 sau khi hoàn tất.
 Giữ layout/router/client convention và responsive. Chạy frontend checks/backend verify,
 ghi handoff D2 cùng routes, actions và kết quả demo. Không tự sửa Reporting internals.
+Tổ chức theo Authority Operational Workbench và dùng shared tokens/components; không
+nhân bản theme/client hay thêm dashboard/map/drag-drop. Kiểm tra 360/768/1280px,
+keyboard/focus, reduced motion và tương phản theo design spec.
 ```
 
 ## A1 — Hoàn thiện security và phần UI dùng chung (người 1)
 
 ```text
 Thực hiện A1; đọc AGENTS.md, kế hoạch MVP, bộ prompt/mục Quy tắc chung và contracts P00.
-Điều kiện P01. Chỉ thay đổi security/shared frontend/root cần thiết, không thay owner
-module nghiệp vụ. Chạy lại phần audit khi B2/D1 đã merge trước khi chốt A1 DONE.
+Đọc design system và handoff UI01-A. Điều kiện UI01-A đã merge. Chỉ thay đổi
+security/shared frontend/root cần thiết, không thay owner module nghiệp vụ. UI01-A
+đã sở hữu theme/primitives/S01; A1 không làm lại hoặc đổi thẩm mỹ design system.
+Chạy lại phần audit khi B2/D1 đã merge trước khi chốt A1 DONE.
 
 Đối chiếu từng E01–E15 với role matrix: login công khai, các method/route nghiệp vụ
 đúng quyền, ownership do application của module kiểm tra, unknown API default deny.
@@ -635,10 +673,12 @@ JSON 401/403 nhất quán, không stacktrace/token/password trong response hoặ
 Giữ health/Swagger hoạt động; OpenAPI khai báo Bearer. Không authentication giả,
 generated user, registration hoặc refresh/logout endpoint ngoài scope.
 
-Hoàn thiện shared frontend: nav theo role, guard, handling 401/403, memory token,
+Hoàn thiện shared frontend behavior: nav theo role, guard, handling 401/403, memory token,
 clear user-specific state khi logout; không biến frontend role guard thành security
 duy nhất. Ghép feature route exports đã sẵn sàng, thống nhất error/loading/empty/form
-components, không copy module screens hoặc viết lại CSS người khác không cần thiết.
+behavior trên primitives UI01-A, không copy module screens hoặc viết lại design/CSS
+người khác không cần thiết. Thiếu primitive mới thì bổ sung nhỏ, có consumer thật và
+document trong handoff; không mở rộng thành UI framework riêng.
 Kiểm tra proxy/CORS chỉ cấu hình cần thiết theo môi trường, không mở wildcard credentials.
 
 Thêm tests tập trung các lỗ hổng thực tế; cập nhật security ADR với behavior reload,
@@ -651,7 +691,8 @@ không đánh dấu toàn bộ security pass nếu chưa có các API để ki�
 
 ```text
 Thực hiện A2; đọc AGENTS.md, kế hoạch MVP, bộ prompt/mục Quy tắc chung và contracts P00.
-P01 đã merge; sở hữu Docker/Compose/CI/root env/frontend build configuration.
+Đọc design system/handoff UI01-A. P01 và UI01-A đã merge; sở hữu Docker/Compose/CI/
+root env/frontend build configuration. Không sửa giao diện feature trong task này.
 
 Thêm frontend container multi-stage: npm ci + production build, phục vụ static SPA,
 history fallback và proxy /api tới backend qua Docker network. Không API gateway
@@ -677,7 +718,8 @@ Ghi handoff A2 với lệnh thực chạy, ports, images, CI coverage và việc
 
 ```text
 Thực hiện X1; đọc AGENTS.md, kế hoạch MVP, bộ prompt/mục Quy tắc chung và contracts P00.
-Điều kiện B3/C2/D2/A1 và A2 phần runtime đã merge. Đọc handoff từng task và diff trước
+Đọc design system và handoff UI01-A/UI01-C1/UI01-B. Điều kiện UI01-B, A1 và A2 phần
+runtime đã merge; UI01-B đã xác nhận đủ B3/C2/D2/UI01-C1. Đọc handoff từng task và diff trước
 khi sửa. Không regenerate module hoặc triển khai tính năng ngoài 15 API/6 màn hình.
 
 Chạy stack thật. Kiểm tra hai citizen + một authority từ demo bootstrap; chuỗi:
@@ -701,8 +743,10 @@ Chốt feature freeze chỉ khi flow thật hoạt động; X2/C3/D3 sau đó m�
 
 ```text
 Thực hiện X2; đọc AGENTS.md, kế hoạch MVP, bộ prompt/mục Quy tắc chung và contracts P00.
-Điều kiện X1. Dùng browser test framework đã có; nếu chưa có, phối hợp người 1 thêm
-Playwright làm devDependency trong shared lockfile, không tự tạo hệ thống test trùng.
+Đọc design system và handoff UI01-B. Điều kiện X1. Dùng browser test framework đã có;
+repo đã có Playwright từ P01/C1, vì vậy tái sử dụng cấu hình hiện tại; chỉ phối hợp
+người 1 chỉnh shared lockfile/config khi có nhu cầu thật, không tạo framework test trùng.
+Nếu trạng thái code sau merge khác, kiểm tra trước khi thêm dependency.
 
 Viết browser E2E với frontend → backend → PostGIS thật, không intercept/mock API
 nghiệp vụ trong các test acceptance. Dataset/credentials test riêng từ env, cleanup
@@ -714,7 +758,8 @@ session hết hạn, input invalid, pending withdraw, reject, phân team, tiến
 409 khi dữ liệu bị thay đổi. Race correctness chính dùng D1 integration tests;
 E2E kiểm tra người dùng thấy lỗi và refresh đúng, không thay thế test transaction.
 Sau logout không còn dữ liệu riêng từ user trước. Kiểm tra viewport desktop/mobile
-cơ bản và label/keyboard flows quan trọng, không đặt yêu cầu pixel-perfect lớn.
+cơ bản, thêm 360/768/1280 theo UI acceptance khi khả thi, label/keyboard/focus và
+reduced motion flows quan trọng; không đặt yêu cầu pixel-perfect lớn.
 
 Cung cấp scripts chạy/fixture/ports, trace khi fail không lộ token, phối hợp A2 đưa
 vào CI với services thật. Chạy suite thật, backend verify và frontend checks.
@@ -758,6 +803,8 @@ AGENTS.md; handoff D3 ghi rõ phép đo thực hiện vs chỉ chuẩn bị, m�
 Thực hiện C3; đọc AGENTS.md, kế hoạch MVP, bộ prompt/mục Quy tắc chung và contracts P00.
 Điều kiện X1; đọc code/handoff thực tế, bổ sung kết quả X2/D3 khi có. Không implement
 feature mới. README/context hiện có thể khác code, kiểm tra trước khi cập nhật.
+Đọc design system và UI01 handoffs; mô tả nó là quyết định UX của frontend hiện tại,
+không gọi nó là module kiến trúc hoặc tính năng nghiệp vụ mới.
 
 Cập nhật README, hướng dẫn clone/run tiếng Việt, architecture overview, C4 context
 và container/component diagram vừa đủ cho modular monolith + SPA + DB. Ghi rõ
@@ -782,7 +829,8 @@ Link benchmark D3, không tự điền số. Handoff C3 và progress; chạy che
 
 ```text
 Thực hiện A3; đọc AGENTS.md, kế hoạch MVP, bộ prompt/mục Quy tắc chung, contracts P00
-và mọi handoff P01/B1/B2/B3/C1/C2/C3/D1/D2/D3/A1/A2/X1/X2. Prerequisite phải merge.
+và mọi handoff P01/B1/B2/B3/C1/C2/C3/D1/D2/D3/A1/A2/UI01-A/UI01-C1/UI01-B/X1/X2.
+Prerequisite phải merge. Đọc design system và acceptance UI đã review.
 Đây là final audit, không thêm tính năng, không bắt đầu Pha 2, không tự tag/push/deploy.
 
 Kiểm tra từ checkout/clone sạch có thể chạy frontend/backend/PostGIS theo docs với
