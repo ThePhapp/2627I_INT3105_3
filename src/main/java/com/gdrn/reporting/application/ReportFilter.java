@@ -6,7 +6,10 @@ import com.gdrn.reporting.domain.ReportType;
 import java.util.UUID;
 
 /** Null optional filters mean absent; ownership is deliberately not a client filter. */
-public record ReportFilter(int page, int size, Sort sort, ReportStatus status, ReportType type, UUID disasterId) {
+public record ReportFilter(int page, int size, Sort sort, ReportStatus status, ReportType type, UUID disasterId, ReportRadius radius) {
+    public ReportFilter(int page, int size, Sort sort, ReportStatus status, ReportType type, UUID disasterId) {
+        this(page, size, sort, status, type, disasterId, null);
+    }
     public enum Sort { CREATED_DESC, CREATED_ASC }
 
     public ReportFilter {

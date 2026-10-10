@@ -2,6 +2,9 @@ package com.gdrn.reporting.api;
 
 import com.gdrn.reporting.application.ReportAccessDenied;
 import com.gdrn.reporting.application.ReportNotFound;
+import com.gdrn.reporting.application.DisasterNotActive;
+import com.gdrn.reporting.domain.InvalidReportTransition;
+import org.springframework.web.HttpMediaTypeNotSupportedException;
 import com.gdrn.reporting.domain.InvalidReport;
 import com.gdrn.shared.api.ApiError;
 import jakarta.servlet.http.HttpServletRequest;
@@ -36,6 +39,21 @@ public class ReportErrors {
     @ExceptionHandler(Exception.class)
     ResponseEntity<ApiError> unexpected(HttpServletRequest request) {
         return error(500, "INTERNAL_ERROR", "Request could not be completed.", request);
+    }
+
+    @ExceptionHandler(InvalidReportTransition.class)
+    ResponseEntity<ApiError> transition(HttpServletRequest request) {
+        return error(409, "INVALID_TRANSITION", "Report transition is not allowed.", request);
+    }
+
+    @ExceptionHandler(DisasterNotActive.class)
+    ResponseEntity<ApiError> inactive(HttpServletRequest request) {
+        return error(409, "DISASTER_NOT_ACTIVE", "Disaster is not active.", request);
+    }
+
+    @ExceptionHandler(HttpMediaTypeNotSupportedException.class)
+    ResponseEntity<ApiError> media(HttpServletRequest request) {
+        return error(415, "UNSUPPORTED_MEDIA_TYPE", "Use application/json.", request);
     }
 
     private ResponseEntity<ApiError> error(int status, String code, String message, HttpServletRequest request) {

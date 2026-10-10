@@ -39,8 +39,8 @@ powershell -NoProfile -ExecutionPolicy Bypass -File scripts/local.ps1 -Action st
 Không dùng `down -v`. Đây là local development: frontend Vite chạy trên host; frontend
 container phục vụ production vẫn thuộc A2. Những cách chạy thủ công dưới đây vẫn dùng được.
 
-Runtime hiện có E01–E09, S01 `/login`, S05 `/operations/disasters` và theme UI01-A.
-E10–E15/S02/S03/S04/S06 chưa triển khai. Không register/refresh/logout API.
+Runtime hiện có E01–E11, S01 `/login`, S05 `/operations/disasters` và theme UI01-A.
+E12–E15/S02/S03/S04/S06 chưa triển khai. Không register/refresh/logout API.
 Yêu cầu: Docker đang chạy, Node **22.14.0**, npm đi kèm Node; Java 21 chỉ cần cho
 backend host/Maven tests, không cần khi chạy backend bằng Compose. CI dùng cùng
 Node từ `frontend/.nvmrc`. [Hướng dẫn DB/Docker](HUONG_DAN_CAI_DAT_VA_CHAY.md) vẫn áp dụng.
@@ -88,7 +88,7 @@ docker compose up -d --wait database
 ```
 
 Nếu chỉ muốn backend không seed, dùng profiles `local`; vẫn phải có JWT key.
-Maven/Flyway áp dụng migrations chưa chạy theo thứ tự (hiện V1–V4), không xóa volume.
+Maven/Flyway áp dụng migrations chưa chạy theo thứ tự (nhánh B2: V1–V5), không xóa volume.
 Dừng Compose backend trước nếu tranh cổng. Host JDBC URL `DB_URL` phải chứa đúng
 host port `DB_PORT`; Spring không tự ghép DB_PORT vào URL. Backend host dùng
 `SERVER_PORT`, mặc định8080; `APP_PORT` chỉ là cổng publish của Compose.
@@ -115,7 +115,7 @@ Authority mở S05 bằng link Thảm họa trên nav; Citizen không có link n
 Khi B3/C2 export routes thật, auto redirect theo role và navigation tự đăng ký.
 Không tạo placeholder cho các màn hình còn thiếu. Router tự deny role sai; backend vẫn là security gate.
 
-Swagger: `http://localhost:8080/swagger-ui/index.html` (đổi port theo cấu hình), công bố E01–E09;
+Swagger: `http://localhost:8080/swagger-ui/index.html` (đổi port theo cấu hình), công bố E01–E11;
 health: `/actuator/health`. Các API tương lai vẫn deny. Không bật DEBUG/TRACE cho
 request body, JWT hoặc Hibernate binds; app đặt mức INFO cho web/security, OFF binds.
 
