@@ -1,8 +1,9 @@
 # Tiến độ Pha 1
 
-Cập nhật 10/10/2026 sau đối chiếu main `ca3751d` và triển khai nhánh B2. Đây là bảng trạng thái, không phải kế hoạch riêng.
+Cập nhật 10/10/2026 sau đối chiếu main `ca3751d`, triển khai nhánh B2 và UI01-C1. Đây là bảng trạng thái, không phải kế hoạch riêng.
 **DONE không đồng nghĩa đã review/merge** hay toàn bộ 15 APIs/6 screens đã implemented.
 Nhánh B2 từ main `ca3751d` có E01–E11 và S01/S05, Flyway V1–V5 (chờ review/merge); xem [handoff B2](handoffs/B2.md).
+Nhánh UI01-C1 từ B2 `2814b4f` đã cải tạo S05 và chờ review/merge; xem [handoff UI01-C1](handoffs/UI01-C1.md).
 Xem [P00 handoff](handoffs/P00.md) và [kế hoạch/dependencies](PROMPTS_PHA_1_4_NGUOI.md).
 
 **Bổ sung 09/10/2026 — F00 nền tảng chạy được:** hoàn tất readiness/liveness,
@@ -19,7 +20,7 @@ Xem [handoff F00](handoffs/F00.md) để tra lịch sử kiểm chứng. Nền t
 | C1 | 3 | P01 | DONE | [Handoff](handoffs/C1.md): E03–E06/S05, V3, DisasterQuery; integration retest 62 backend +15 frontend +4 browser tests pass; list snapshot đã sửa theo P00 |
 | UI01-A | 1 | P00, P01, B1, C1 | DONE | [Handoff](handoffs/UI01-A.md): shared theme/primitives + S01; đã merge PR #6 tại `78f164b` (implementation `7445913`); evidence 62 backend/17 frontend/8 browser tests; S05 patch giao UI01-C1 |
 | B2 | 2 | B1, C1 | DONE | [Handoff](handoffs/B2.md): E10/E11, E08 radius, ReportingQuery, V5; 83 backend tests pass; nhánh feat/b2-report-verification, chờ review/merge |
-| UI01-C1 | 3 | UI01-A, C1 | TODO | Cải tạo S05; giữ nguyên E03–E06/route/semantics |
+| UI01-C1 | 3 | UI01-A, C1 | DONE | [Handoff](handoffs/UI01-C1.md): S05 workbench responsive 360/768/1280, focus dialog; 19 frontend +1 browser +83 backend tests pass; nhánh `feat/ui01-c1-disaster-ui`, chờ review/merge |
 | D1 | 4 | B2, C1 | TODO | Rescue backend/DB race protection |
 | B3 | 2 | B1, UI01-A; B2/D1 để hoàn tất | TODO | S02/S03 theo shared design system |
 | C2 | 3 | B2, C1, UI01-A | TODO | S04 theo shared design system |
@@ -33,8 +34,8 @@ Xem [handoff F00](handoffs/F00.md) để tra lịch sử kiểm chứng. Nền t
 | C3 | 3 | X1; bổ sung X2/D3 | TODO | Tài liệu/rubric/demo |
 | A3 | 1 + nhóm | X2, C3, D3, UI01-B và mọi task trước | TODO | Audit cuối; không tuyên bố Pha 1 DONE khi thiếu evidence |
 
-P00/P01/B1/C1/UI01-A đã tích hợp. B2 hoàn tất trên nhánh riêng, chờ review/merge. Có thể giao UI01-C1 (người 3),
-A1/A2 lượt đầu (người 1) theo catalog, trên nhánh/clone riêng. B3 phần gửi/xem đã đủ
+P00/P01/B1/C1/UI01-A đã tích hợp. B2 và UI01-C1 hoàn tất trên nhánh riêng, chờ review/merge.
+Có thể giao A1/A2 lượt đầu (người 1) theo catalog, trên nhánh/clone riêng. B3 phần gửi/xem đã đủ
 dependency nhưng người 2 cần tự sắp lịch với B2; B3 chỉ DONE sau B2/D1. C2 đợi B2;
 D1 đợi B2; D2 đợi D1. Chưa đủ điều kiện chạy UI01-B/X1/X2/A3.
 Chỉ thực hiện prompt được giao; bảng này không tự giao hoặc khởi chạy task tiếp theo.
