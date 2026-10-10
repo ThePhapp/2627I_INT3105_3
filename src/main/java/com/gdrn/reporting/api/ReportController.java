@@ -3,6 +3,11 @@ package com.gdrn.reporting.api;
 import com.gdrn.reporting.application.ReportAccessDenied;
 import com.gdrn.reporting.application.ReportActor;
 import com.gdrn.reporting.application.ReportService;
+import com.gdrn.reporting.application.ReportModerationService;
+import com.gdrn.reporting.domain.ReportStatus;
+import com.fasterxml.jackson.databind.JsonNode;
+import org.springframework.web.bind.annotation.PatchMapping;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import com.gdrn.reporting.domain.Coordinates;
 import com.gdrn.reporting.domain.InvalidReport;
 import com.gdrn.reporting.domain.ReportType;
@@ -28,8 +33,11 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping(value = "/api/reports", produces = "application/json")
 public class ReportController {
     private final ReportService reports;
+    private final ReportModerationService moderation;
 
-    public ReportController(ReportService reports) { this.reports = reports; }
+    public ReportController(ReportService reports, ReportModerationService moderation) {
+        this.reports = reports; this.moderation = moderation;
+    }
 
     @PostMapping(consumes = "application/json")
     @Operation(operationId = "E07", summary = "Submit a report")
@@ -46,7 +54,7 @@ public class ReportController {
     }
 
     @GetMapping
-    @Operation(operationId = "E08", summary = "List visible reports (spatial filters pending B2)")
+    @Operation(operationId = "E08", summary = "List visible reports with optional radius filter")
     public ResponseEntity<PageResponse> list(@Parameter(hidden = true) @AuthenticationPrincipal Jwt principal, HttpServletRequest request) {
         var actor = actor(principal);
         var page = reports.list(actor, ReportRequestParser.filter(request));
@@ -64,6 +72,30 @@ public class ReportController {
         ReportRequestParser.noBody(request);
         return ResponseEntity.ok().cacheControl(CacheControl.noStore()).body(ReportResponse.from(
                 reports.detail(actor, ReportRequestParser.uuid(id, "id"))));
+    }
+
+    @PatchMapping(value = "/{id}/verification", consumes = "application/json")
+    @Operation(operationId = "E10", summary = "Verify or reject a pending report")
+    public ResponseEntity<ReportResponse> decide(@Parameter(hidden = true) @AuthenticationPrincipal Jwt principal,
+            @PathVariable String id, @RequestBody JsonNode body, HttpServletRequest request) {
+        var actor = actor(principal);
+        actor.requireAuthority();
+        ReportRequestParser.noQuery(request);
+        var decision = ReportRequestParser.decision(body);
+        return ResponseEntity.ok().cacheControl(CacheControl.noStore()).body(ReportResponse.from(
+                moderation.decide(actor, ReportRequestParser.uuid(id, "id"), decision)));
+    }
+
+    @DeleteMapping("/{id}")
+    @Operation(operationId = "E11", summary = "Withdraw an owned pending report")
+    public ResponseEntity<Void> withdraw(@Parameter(hidden = true) @AuthenticationPrincipal Jwt principal,
+            @PathVariable String id, HttpServletRequest request) {
+        var actor = actor(principal);
+        actor.requireCitizen();
+        ReportRequestParser.noQuery(request);
+        ReportRequestParser.noBody(request);
+        moderation.withdraw(actor, ReportRequestParser.uuid(id, "id"));
+        return ResponseEntity.noContent().cacheControl(CacheControl.noStore()).build();
     }
 
     private static ReportActor actor(Jwt principal) {
