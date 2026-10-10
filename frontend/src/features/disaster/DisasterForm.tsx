@@ -1,5 +1,6 @@
 import { useState, type FormEvent } from 'react'
 import { Field } from '../../shared/components'
+import { severityLabels, typeLabels } from './DisasterBadges'
 import {
   disasterTypes,
   severities,
@@ -12,13 +13,6 @@ import {
 
 type FormValue = Omit<DisasterFields, 'latitude' | 'longitude'> & { latitude: string; longitude: string }
 type Errors = Partial<Record<keyof FormValue | 'form', string>>
-
-const typeLabels: Record<DisasterType, string> = {
-  EARTHQUAKE: 'Động đất', FLOOD: 'Lũ lụt', TYPHOON: 'Bão', WILDFIRE: 'Cháy rừng', TSUNAMI: 'Sóng thần',
-}
-const severityLabels: Record<Severity, string> = {
-  LOW: 'Thấp', MODERATE: 'Trung bình', HIGH: 'Cao', CRITICAL: 'Nghiêm trọng',
-}
 
 function valueOf(disaster?: Disaster): FormValue {
   return disaster ? {
@@ -66,8 +60,13 @@ export function DisasterForm({ disaster, busy, onCancel, onCreate, onEdit }: {
   async function submit(event: FormEvent) {
     event.preventDefault()
     if (busy) return
+    const form = event.currentTarget
     const checked = validate(value)
-    if (!checked.fields) { setErrors(checked.errors); return }
+    if (!checked.fields) {
+      setErrors(checked.errors)
+      requestAnimationFrame(() => form.querySelector<HTMLElement>('[aria-invalid="true"]')?.focus())
+      return
+    }
     if (!disaster) { await onCreate(checked.fields); return }
     const patch: DisasterPatch = { expectedVersion: disaster.version }
     for (const key of ['name', 'type', 'severity', 'description', 'latitude', 'longitude'] as const) {
@@ -81,7 +80,8 @@ export function DisasterForm({ disaster, busy, onCancel, onCreate, onEdit }: {
   }
 
   return <form className="disaster-form" onSubmit={submit} noValidate aria-busy={busy}>
-    <Field id="disaster-name" label="Tên thảm họa" value={value.name} maxLength={120}
+    <Field id="disaster-name" label="Tên thảm họa" value={value.name} maxLength={120} autoFocus
+      hint="Tối đa 120 ký tự."
       onChange={event => set('name', event.target.value)} error={errors.name} disabled={busy} required />
     <div className="disaster-form__pair">
       <div className="field"><label htmlFor="disaster-type">Loại thảm họa</label>
@@ -98,14 +98,17 @@ export function DisasterForm({ disaster, busy, onCancel, onCreate, onEdit }: {
     <div className="field"><label htmlFor="disaster-description">Mô tả</label>
       <textarea id="disaster-description" value={value.description} maxLength={2000} rows={5}
         onChange={event => set('description', event.target.value)} aria-invalid={Boolean(errors.description)}
-        aria-describedby={errors.description ? 'disaster-description-error' : undefined} disabled={busy} required />
+        aria-describedby={`disaster-description-hint${errors.description ? ' disaster-description-error' : ''}`} disabled={busy} required />
+      <span id="disaster-description-hint" className="field-hint">Mô tả tình hình hiện tại, tối đa 2.000 ký tự.</span>
       {errors.description && <span id="disaster-description-error" className="field-error">{errors.description}</span>}
     </div>
     <div className="disaster-form__pair">
       <Field id="disaster-latitude" label="Vĩ độ" type="number" step="any" value={value.latitude}
-        onChange={event => set('latitude', event.target.value)} error={errors.latitude} disabled={busy} required />
+        hint="Từ -90 đến 90." onChange={event => set('latitude', event.target.value)}
+        error={errors.latitude} disabled={busy} required />
       <Field id="disaster-longitude" label="Kinh độ" type="number" step="any" value={value.longitude}
-        onChange={event => set('longitude', event.target.value)} error={errors.longitude} disabled={busy} required />
+        hint="Từ -180 đến 180." onChange={event => set('longitude', event.target.value)}
+        error={errors.longitude} disabled={busy} required />
     </div>
     {errors.form && <p className="field-error" role="alert">{errors.form}</p>}
     <div className="disaster-actions">
@@ -114,5 +117,3 @@ export function DisasterForm({ disaster, busy, onCancel, onCreate, onEdit }: {
     </div>
   </form>
 }
-
-export { severityLabels, typeLabels }
