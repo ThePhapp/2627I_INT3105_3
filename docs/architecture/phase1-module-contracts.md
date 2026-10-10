@@ -151,7 +151,7 @@ nhánh riêng, không dùng ngày/owner prefix để lách thứ tự.
 | 1 | Identity / 1 | P01 | V2__identity_accounts.sql | Đã merge qua e4b449b; identity_users + identity_credentials, không seed |
 | 2 | Disaster / 3 | C1 | V3__disasters.sql | Đã tích hợp vào main qua bacf960; Disaster lifecycle/expected-version atomic update, sau V2 |
 | 3 | Reporting / 2; tích hợp / 1 | B1 | V4__reporting_reports.sql | Đã tích hợp/chốt tại c850103 trên nền bacf960 có V1–V3; PENDING/geography, không seed/FK xuyên module |
-| Tiếp theo | Reporting / 2 | B2 | CHƯA CẤP | Verification/soft-delete/spatial, migration mới trước Rescue; không sửa V4 |
+| Tiếp theo | Reporting / 2 | B2 | V5__reporting_verification_withdrawal.sql | Nhánh B2 từ main ca3751d: đối chiếu V1–V4 trước khi cấp V5; mở lifecycle constraints, metadata/withdrawn_at/version và GiST cho E08; giữ nguyên V4, chờ review/merge |
 | 4 | Rescue / 4 | D1 | CHƯA CẤP | Team/mission/unique constraints sau B2 |
 
 B1 domain/application có thể làm song song C1 sau P01, nhưng persistence migration
