@@ -1,3 +1,4 @@
+import { useRef } from 'react'
 import { EmptyState, ErrorMessage, Loading } from '../../shared/components'
 import type { Disaster } from './disaster-api'
 import { ResolveDisasterDialog } from './ResolveDisasterDialog'
@@ -17,6 +18,7 @@ export function DisasterDetail({ disaster, loading, error, busy, confirming, onE
   onCancelResolve: () => void
   onRetry: () => void
 }) {
+  const resolveTrigger = useRef<HTMLButtonElement>(null)
   if (loading) return <Loading>Đang tải chi tiết…</Loading>
   if (error) return <div className="disaster-panel__error"><ErrorMessage>{error}</ErrorMessage>
     <button type="button" className="secondary" onClick={onRetry}>Tải lại chi tiết</button></div>
@@ -38,11 +40,11 @@ export function DisasterDetail({ disaster, loading, error, busy, confirming, onE
       <div><dt>Mã thảm họa</dt><dd className="disaster-facts__id">{disaster.id}</dd></div>
       <div><dt>Phiên bản</dt><dd>{disaster.version}</dd></div>
     </dl>
-    {disaster.status === 'ACTIVE' && !confirming && <div className="disaster-actions">
+    {disaster.status === 'ACTIVE' && <div className="disaster-actions">
       <button type="button" onClick={onEdit} disabled={busy}>Chỉnh sửa</button>
-      <button type="button" className="danger-secondary" onClick={onConfirm} disabled={busy}>Kết thúc thảm họa</button>
+      <button ref={resolveTrigger} type="button" className="danger-secondary" onClick={onConfirm} disabled={busy}>Kết thúc thảm họa</button>
     </div>}
-    {confirming && <ResolveDisasterDialog disasterName={disaster.name} busy={busy}
+    {confirming && <ResolveDisasterDialog disasterName={disaster.name} busy={busy} returnFocus={resolveTrigger.current}
       onResolve={onResolve} onCancel={onCancelResolve} />}
   </div>
 }

@@ -1,8 +1,9 @@
 import { useEffect, useRef, type KeyboardEvent } from 'react'
 
-export function ResolveDisasterDialog({ disasterName, busy, onResolve, onCancel }: {
+export function ResolveDisasterDialog({ disasterName, busy, returnFocus, onResolve, onCancel }: {
   disasterName: string
   busy: boolean
+  returnFocus?: HTMLElement | null
   onResolve: () => void
   onCancel: () => void
 }) {
@@ -10,20 +11,24 @@ export function ResolveDisasterDialog({ disasterName, busy, onResolve, onCancel 
   const cancel = useRef<HTMLButtonElement>(null)
 
   useEffect(() => {
-    const previousFocus = document.activeElement instanceof HTMLElement ? document.activeElement : null
     const previousOverflow = document.body.style.overflow
     document.body.style.overflow = 'hidden'
     cancel.current?.focus()
     return () => {
       document.body.style.overflow = previousOverflow
-      if (previousFocus?.isConnected) previousFocus.focus()
     }
   }, [])
+
+  function close() {
+    if (busy) return
+    onCancel()
+    if (returnFocus?.isConnected) returnFocus.focus()
+  }
 
   function handleKeyDown(event: KeyboardEvent<HTMLDivElement>) {
     if (event.key === 'Escape' && !busy) {
       event.preventDefault()
-      onCancel()
+      close()
       return
     }
     if (event.key !== 'Tab') return
@@ -47,7 +52,7 @@ export function ResolveDisasterDialog({ disasterName, busy, onResolve, onCancel 
       <h2 id="resolve-title">Kết thúc thảm họa?</h2>
       <p id="resolve-description">“{disasterName}” sẽ chuyển sang Đã kết thúc và không thể mở lại hoặc chỉnh sửa.</p>
       <div className="resolve-dialog__actions">
-        <button ref={cancel} type="button" className="secondary" onClick={() => { if (!busy) onCancel() }}
+        <button ref={cancel} type="button" className="secondary" onClick={close}
           aria-disabled={busy}>Quay lại</button>
         <button type="button" className="danger" onClick={() => { if (!busy) onResolve() }}
           aria-busy={busy} aria-disabled={busy}>
