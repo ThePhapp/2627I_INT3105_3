@@ -33,7 +33,7 @@ backend dùng `APP_PORT` trong `.env`. PostgreSQL/PostGIS lưu dữ liệu trong
 của Compose. Tài khoản đăng nhập nằm trong `.env`, không cần tạo SQL thủ công.
 Xem [start/stop và database local](docs/P01_LOCAL.md#chạy-local-lâu-dài-trên-windows).
 
-**Kế hoạch triển khai duy nhất:** [Pha 1 MVP và 16 prompt theo owner/dependency](docs/PROMPTS_PHA_1_4_NGUOI.md).
+**Kế hoạch triển khai duy nhất:** [Pha 1 MVP với 16 task lõi và 3 checkpoint UI theo owner/dependency](docs/PROMPTS_PHA_1_4_NGUOI.md).
 Đây là kế hoạch phát triển, không phải danh sách tính năng đã hoàn thành.
 
 **P00 design baseline (planned):** [HTTP/OpenAPI và 15 API/6 màn hình](docs/api/phase1-contract.md),
