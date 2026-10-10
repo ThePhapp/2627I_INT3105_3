@@ -8,7 +8,9 @@ và [ADR 005](../adr/005-phase1-mvp-auth-frontend.md).
 ## Chiều phụ thuộc và owner
 
 ```text
-Rescue application → Reporting application.contract → Disaster application.contract
+Rescue → Reporting → Disaster                 (chiều phụ thuộc module mục tiêu)
+Consumer application → consumer-owned port
+Consumer infrastructure adapter → provider application.contract
 ```
 
 Disaster không biết Reporting/Rescue; Reporting không biết Rescue. Domain chỉ Java,
@@ -27,37 +29,42 @@ HTTP/Page. Chưa tạo package/class placeholder P00.
 Identity không cần published query cho MVP: security adapter cung cấp authenticated
 user UUID và active role cho use case, không tin body và không kéo Spring principal
 vào application/domain. E02 do Identity sở hữu. Không module gọi ngược Identity
-persistence để xác thực mỗi resource. Role/user provisioning/deletion ngoài scope.
+persistence để xác thực mỗi resource. Public user/role administration và deletion
+ngoài scope. Provisioning demo nội bộ thuộc P01 đã có; không cấm bootstrap đã chốt.
 
-## Signatures dự kiến — chỉ tài liệu
+## Published signatures và trạng thái triển khai
+
+DisasterQuery bên dưới đã có ở C1; ReportingQuery là contract đích của B2, chưa có
+runtime. Các type public đặt ở file Java riêng khi triển khai; đoạn dưới mô tả
+signature, không yêu cầu tạo placeholder hay một file chứa nhiều public types.
 
 Trong `com.gdrn.disaster.application.contract`:
 
 ```java
-interface DisasterQuery {
+public interface DisasterQuery {
     Optional<DisasterSnapshot> findById(UUID disasterId);
     Map<UUID, DisasterSnapshot> findByIds(Set<UUID> disasterIds);
 }
-record DisasterSnapshot(UUID id, DisasterState status) {}
-enum DisasterState { ACTIVE, RESOLVED }
+public record DisasterSnapshot(UUID id, DisasterState status) {}
+public enum DisasterState { ACTIVE, RESOLVED }
 ```
 
 Trong `com.gdrn.reporting.application.contract`:
 
 ```java
-interface ReportingQuery {
+public interface ReportingQuery {
     Optional<ReportSnapshot> findById(UUID reportId);
     Map<UUID, ReportSnapshot> findByIds(Set<UUID> reportIds);
 }
-record ReportSnapshot(
+public record ReportSnapshot(
     UUID id,
     UUID reporterId,
     ReportState status,
     Optional<LinkedDisaster> disaster
 ) {}
-record LinkedDisaster(UUID id, LinkedDisasterState status) {}
-enum ReportState { PENDING, VERIFIED, REJECTED }
-enum LinkedDisasterState { ACTIVE, RESOLVED }
+public record LinkedDisaster(UUID id, LinkedDisasterState status) {}
+public enum ReportState { PENDING, VERIFIED, REJECTED }
+public enum LinkedDisasterState { ACTIVE, RESOLVED }
 ```
 
 DTO immutable; collections defensive copies/unmodifiable; UUID/enums/Optional không
@@ -131,19 +138,19 @@ Soft-delete Report lưu dấu rút riêng, mọi query bình thường loại tr
 ReportStatus thành WITHDRAWN. Timestamp/enum/version business mapping do owner thiết
 kế trong feature. Team availability được suy từ mission, tránh hai nguồn sự thật.
 
-## Sổ migration (08/10/2026)
+## Sổ migration (khởi tạo 08/10/2026; đối chiếu main 10/10/2026)
 
 Người 1 giữ ledger và cấp version **khi PR sẵn sàng merge**, sau khi đọc Flyway history
-của nhánh tích hợp và danh sách migrations đã merge. Bảng dưới là thứ tự, **không phải
-reservation V2/V3/V4/V5**. Mỗi feature có thể cần nhiều migration; không tự cấp số ở
+của nhánh tích hợp và danh sách migrations đã merge. V1–V4 dưới đây đã cấp/merge;
+các slot **CHƯA CẤP không phải reservation số tiếp theo**. Mỗi feature có thể cần nhiều migration; không tự cấp số ở
 nhánh riêng, không dùng ngày/owner prefix để lách thứ tự.
 
 | Slot merge | Module / owner | Task | Version | Nội dung dự kiến / trạng thái |
 | --- | --- | --- | --- | --- |
 | Đã có | Technical / 1 | Bootstrap | V1__enable_postgis.sql | Chỉ extension PostGIS; giữ nguyên |
 | 1 | Identity / 1 | P01 | V2__identity_accounts.sql | Đã merge qua e4b449b; identity_users + identity_credentials, không seed |
-| 2 | Disaster / 3 | C1 | V3__disasters.sql | Disaster lifecycle, expected-version atomic update; cấp sau khi xác nhận main chỉ có V1/V2 |
-| 3 | Reporting / 2; tích hợp / 1 | B1 | V4__reporting_reports.sql | Cấp trong tích hợp B1/C1 theo yêu cầu merge, nền main bacf960 có V1–V3; DB local trước upgrade ở V2. PENDING/geography, không seed/FK xuyên module |
+| 2 | Disaster / 3 | C1 | V3__disasters.sql | Đã tích hợp vào main qua bacf960; Disaster lifecycle/expected-version atomic update, sau V2 |
+| 3 | Reporting / 2; tích hợp / 1 | B1 | V4__reporting_reports.sql | Đã tích hợp/chốt tại c850103 trên nền bacf960 có V1–V3; PENDING/geography, không seed/FK xuyên module |
 | Tiếp theo | Reporting / 2 | B2 | CHƯA CẤP | Verification/soft-delete/spatial, migration mới trước Rescue; không sửa V4 |
 | 4 | Rescue / 4 | D1 | CHƯA CẤP | Team/mission/unique constraints sau B2 |
 

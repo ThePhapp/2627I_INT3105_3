@@ -1,5 +1,15 @@
 # GDRN — Codex Project Context & Engineering Specification
 
+> **Cách đọc hiện tại — 10/10/2026:** Đây là context dài hạn/backlog, không phải
+> implementation plan hay bản mô tả runtime. Dùng [catalog duy nhất](docs/PROMPTS_PHA_1_4_NGUOI.md)
+> cho scope/dependency, [progress](docs/phase1-progress.md) cho merge/evidence,
+> [architecture hiện tại](docs/architecture/architecture-overview.md) và contracts P00
+> cho kỹ thuật. P00/P01/B1/C1/UI01-A đã tích hợp trên main `78f164b`: E01–E09,
+> S01/S05, V1–V4 và shared Crisis Command UI. Phần API/schema/events/phân công/rubric
+> bên dưới là lịch sử hoặc mục tiêu dài hạn khi chưa được catalog MVP chọn triển khai.
+> “Event mặc định internal/in-process” trong context cũ không cho phép thêm event bus
+> vào MVP; ADR004 là đề xuất tương lai. Không chạy lại prompt đã hoàn tất.
+
 > **Tích hợp B1/C1 — 09/10/2026:** E01–E09 và S01/S05 đã có, Flyway V1–V4.
 > Reporting ownership/PostGIS dùng policy production; radius/verify/withdraw thuộc B2,
 > S02/S03 thuộc B3, Rescue vẫn chưa triển khai. Chỉ giao task theo
@@ -34,7 +44,7 @@
 > **Course:** Kiến trúc phần mềm  
 > **Team size:** 4 thành viên  
 > **Development window:** theo kế hoạch MVP duy nhất (3 tuần dự kiến)
-> **Purpose of this file:** Đây là nguồn ngữ cảnh kỹ thuật chính cho Codex/AI coding agent khi phân tích, thiết kế, sinh hoặc sửa code trong repository GDRN.
+> **Purpose of this file:** Lưu ngữ cảnh dài hạn cho Codex/AI coding agent; scope và runtime hiện tại theo các nguồn ở ghi chú đầu file.
 
 ---
 

@@ -2,6 +2,13 @@
 
 ## Status
 
+Runtime update (2026-10-10): P01, C1, B1 and UI01-A are integrated on main
+`78f164b`; E01–E09/S01/S05 exist. See [progress](../phase1-progress.md) and
+[architecture](../architecture/architecture-overview.md) for current state.
+The dated P00/P01 notes and original context below describe those decision points,
+not today's missing features. Integration is implementation evidence, not a claim
+of a separate whole-team ADR approval. No auth decision is changed by this docs review.
+
 P00 design baseline was Proposed/unimplemented on 2026-10-08; implementation status
 was updated by P01 below. Remaining scope stays planned and team review is pending.
 Next unused number after ADR 004; ADR 001–004 remain unchanged. Acceptance by the
@@ -13,7 +20,7 @@ the remaining business scope and deployment work stay planned. This update recor
 implementation evidence, not an unrecorded whole-team approval. See
 [P01 handoff](../handoffs/P01.md) for exact checks and residual A1/A2 work.
 
-## Context
+## Context at P00 (2026-10-08)
 
 Four contributors have 15 working days for a real citizen-to-rescue flow. The current
 repository has bootstrap infrastructure and plain Java User/EmailAddress/Role with
@@ -71,10 +78,10 @@ form login, Basic, request cache, HTTP session or CORS wildcard is enabled.
   existing account's password/role on rerun, never put credentials in migrations.
 - API security remains central, method/route allowlist, unknown API default deny.
   Object ownership remains in module application; no reliance on UI role guards.
-  No cookie auth, Basic or form login alongside Bearer. Planned CSRF policy: disable
+  No cookie auth, Basic or form login alongside Bearer. Implemented P01 CSRF policy: ignore
   for stateless `/api/**` because browsers do not attach memory-held Bearer tokens
-  automatically; P01 must implement/test and record exact matcher configuration.
-  Keep bootstrap policy until P01. If cookie auth is introduced this decision must
+  automatically; other routes retain CSRF protection. P01 records matcher tests.
+  If cookie auth is introduced this decision must
   be revisited. Dev proxy/same-origin production avoids broad CORS; no wildcard credentials.
 
 ### Planned frontend

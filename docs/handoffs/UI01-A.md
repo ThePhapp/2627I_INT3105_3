@@ -1,7 +1,13 @@
 # Handoff UI01-A — GDRN Crisis Command / shared UI và S01
 
 Ngày 10/10/2026. Owner: Người 1. Nền `main` / `c850103` (P00/P01/B1/C1 đã merge).
-**DONE trong working tree, chưa commit/review/merge.** Không chạy UI01-C1/UI01-B.
+**Cập nhật tích hợp 10/10/2026:** đã merge qua PR #6 tại `78f164b`, implementation
+`7445913`. Phần dưới giữ evidence lúc bàn giao UI01-A; các câu “chưa commit/merge”
+hoặc “sau review/merge” là bối cảnh lịch sử, không phải blocker hiện tại.
+Trạng thái/dependency mới nhất ở [progress](../phase1-progress.md).
+
+**Trạng thái lúc bàn giao:** DONE trong working tree, chưa commit/review/merge.
+Phiên UI01-A không chạy UI01-C1/UI01-B.
 Không thay API, domain, migration, dependency, auth client hay convention đăng ký route.
 
 Nguồn yêu cầu: [kế hoạch duy nhất](../PROMPTS_PHA_1_4_NGUOI.md),

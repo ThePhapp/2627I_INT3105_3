@@ -2,8 +2,9 @@
 
 Read `GDRN_CODEX_PROJECT_CONTEXT.md` for the long-term project specification and
 `docs/architecture/architecture-overview.md` for the current foundation.
-The initial bootstrap contains no business features. The context document's JWT,
-API, schema, and benchmark examples are future work, not implemented behavior.
+The original bootstrap had no business features; current slices are documented in
+`docs/phase1-progress.md` and must be checked against code. Long-term context examples
+are not evidence of implementation; use current contracts and runtime documentation.
 
 Use `docs/PROMPTS_PHA_1_4_NGUOI.md` as the only implementation plan and task catalog.
 Contracts/ADRs define technical requirements; progress/handoffs record evidence,

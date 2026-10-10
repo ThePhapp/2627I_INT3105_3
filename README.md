@@ -1,268 +1,107 @@
 # Global Disaster Response Network (GDRN)
 
-**Hệ thống Điều phối và Ứng phó Thảm họa Toàn cầu**
+**Hệ thống Điều phối và Ứng phó Thảm họa Toàn cầu** — mô phỏng phục vụ môn Kiến trúc
+phần mềm. Pha 1 dùng một Modular Monolith, DDD và Hexagonal/Clean Architecture,
+một PostgreSQL/PostGIS và một React SPA. Đây không phải hệ thống cứu hộ vận hành thực tế.
 
-A university Software Architecture project exploring disaster response coordination.
-Phase 1 uses a **Modular Monolith + DDD + Hexagonal/Clean Architecture**. This repository
-currently contains the foundation, P01 Identity authentication/login SPA and the C1
-Disaster backend/operations screen. The complete response flow remains planned.
+## Bắt đầu
 
-**Hướng dẫn cho máy mới:** [Cài đặt và chạy sau khi clone repo (tiếng Việt)](docs/HUONG_DAN_CAI_DAT_VA_CHAY.md).
-
-**Nền móng chạy được:** [kết quả kiểm chứng lịch sử ngày 09/10/2026](docs/handoffs/F00.md).
-Với Docker Desktop đang chạy Linux containers, dùng PowerShell tại repo:
+Cài Docker Desktop (Linux containers) và Node **22.14.0**. Chạy PowerShell tại root repo:
 
 ```powershell
-.\scripts\dev.ps1 up       # Tạo .env nếu thiếu, build, chờ healthy và smoke-test
-.\scripts\dev.ps1 status   # Xem backend và database
-.\scripts\dev.ps1 verify   # Full Maven verification, bao gồm Testcontainers
-.\scripts\dev.ps1 down     # Dừng containers, giữ dữ liệu database
+.\scripts\local.ps1 -Action setup
+.\scripts\local.ps1 -Action start
 ```
 
-Mở [Swagger](http://localhost:8080/swagger-ui/index.html) sau khi `up` thành công.
-Script in URL đúng theo port Compose; có thể gọi script bằng đường dẫn tuyệt đối
-từ thư mục khác. `.env` có sẵn được giữ nguyên; file mới dùng mật khẩu và JWT key
-ngẫu nhiên. Nếu `.env` cũ chưa có JWT key, chạy `scripts/local.ps1 -Action setup`
-để bổ sung cấu hình P01 và tài khoản demo, giữ giá trị đã cấu hình.
-Nếu đã có database volume, dùng lại credentials của volume trong `.env`.
-Script dev quản lý backend/database; script local bên dưới chạy thêm SPA và demo accounts.
-
-**Chạy local P01 trên Windows:** `powershell -NoProfile -ExecutionPolicy Bypass -File scripts/local.ps1 -Action setup`,
-sau đó cùng lệnh với `-Action start`. Frontend ở `http://127.0.0.1:5173/login`;
-backend dùng `APP_PORT` trong `.env`. PostgreSQL/PostGIS lưu dữ liệu trong named volume
-của Compose. Tài khoản đăng nhập nằm trong `.env`, không cần tạo SQL thủ công.
-Xem [start/stop và database local](docs/P01_LOCAL.md#chạy-local-lâu-dài-trên-windows).
-
-**Kế hoạch triển khai duy nhất:** [Pha 1 MVP với 16 task lõi và 3 checkpoint UI theo owner/dependency](docs/PROMPTS_PHA_1_4_NGUOI.md).
-Đây là kế hoạch phát triển, không phải danh sách tính năng đã hoàn thành.
-
-**P00 design baseline (planned):** [HTTP/OpenAPI và 15 API/6 màn hình](docs/api/phase1-contract.md),
-[published module contracts và sổ migration](docs/architecture/phase1-module-contracts.md),
-[ADR 005: MVP/auth/frontend](docs/adr/005-phase1-mvp-auth-frontend.md),
-[tiến độ](docs/phase1-progress.md), [handoff P00](docs/handoffs/P00.md).
-MVP ba tuần giới hạn Identity/Disaster/Reporting/Rescue và SPA cơ bản. Resource/Alert,
-Geo risk, RescueRequest riêng và các API lớn hơn trong context dài hạn là backlog.
-**P01 implemented:** E01/E02, JWT memory-only, demo accounts và S01 login thật.
-**B1 implemented:** E07–E09, ownership, PostGIS geography và V4; xem [handoff B1](docs/handoffs/B1.md).
-**C1 implemented:** E03–E06, DisasterQuery, migration V3 và S05 tại
-`/operations/disasters`. Xem [cách chạy P01](docs/P01_LOCAL.md),
-[handoff P01](docs/handoffs/P01.md) và [handoff C1](docs/handoffs/C1.md).
-
-## CURRENTLY IMPLEMENTED
-
-- One Java 21 Spring Boot application with Maven Wrapper.
-- Plain Java Identity `User`, `EmailAddress`, `Role` and their unit tests; reconstitution/provisioning preserve existing roles.
-- PostgreSQL/PostGIS infrastructure, Flyway extension migration and JPA configuration.
-- JWT login/me, BCrypt credentials, controlled idempotent demo bootstrap; Swagger exposes E01–E09 (Identity, Disaster and Reporting).
-- React/TypeScript/Vite login, memory-only session and feature route registration; Node 22.14.0/lockfile/CI checks.
-- Disaster ACTIVE→RESOLVED domain, E03–E06, JPA/Flyway V3 and published DisasterQuery.
-- Authority S05 list/filter/page/detail/create/edit/resolve screen using the real API.
-- ArchUnit boundary rules and real PostGIS/HTTP integration tests using Testcontainers.
-- Database-aware readiness, independent liveness and real database outage/recovery tests.
-- PowerShell lifecycle/smoke scripts, Docker/Compose, GitHub Actions runtime checks and ADRs.
-
-## PLANNED
-
-| Module under `com.gdrn` | Responsibility                                                     |
-| ----------------------- | ------------------------------------------------------------------ |
-| identity                | Authentication, authorization, users, roles                        |
-| disaster                | Disaster lifecycle and management                                  |
-| reporting               | Citizen incident reporting                                         |
-| rescue                  | Requests, teams and missions                                       |
-| resource                | Emergency resources and allocations                                |
-| alert                   | Emergency alerts                                                   |
-| geo                     | Geographic operations and spatial risk functionality               |
-| shared                  | Carefully selected technical concerns (configuration exists today) |
-
-Identity and Disaster APIs/persistence plus S01/S05 exist. Reporting/Rescue APIs and
-screens, user administration, domain events and benchmarks remain future work.
-The original [project context](GDRN_CODEX_PROJECT_CONTEXT.md) describes the eventual
-Phase 1 scope; it is not a list of implemented features.
-
-## Stack and repository
-
-Java 21, Spring Boot 3.5.16, Maven 3.9.9, Spring Web/Security/Data JPA/Actuator,
-PostgreSQL 16, PostGIS 3.5, Flyway, Springdoc 2.8.17, JUnit 5, Mockito,
-Testcontainers and ArchUnit 1.4.2. Boot manages compatible dependency versions
-unless explicitly pinned. Hibernate Spatial is deferred until spatial mappings exist.
-
-```text
-.github/workflows/ci.yml        Java 21 verification and Docker build
-scripts/dev.ps1                 Init/up/status/smoke/down/verify development commands
-.mvn/wrapper/                  Maven distribution configuration
-docs/architecture/             Architecture overview and future package tree
-docs/adr/                      Initial architecture decisions
-src/main/java/com/gdrn/         Bootstrap and shared technical configuration
-src/main/resources/            Application profiles and Flyway migrations
-src/test/java/com/gdrn/         Architecture and integration tests
-src/test/resources/             Test profile (container supplies connection data)
-AGENTS.md                      Instructions for future contributors/agents
-Dockerfile                     Multi-stage Java 21 build/runtime
-docker-compose.yml             Backend, PostGIS and persistent volume
-.env.example                   Safe local configuration placeholders
-pom.xml, mvnw, mvnw.cmd         Build and wrappers
-```
-
-Reserved business package trees are documented, not populated with fake classes.
-
-## Prerequisites
-
-- JDK 21 for host development; Maven is downloaded by the wrapper on first use.
-- Docker Engine/Desktop with Linux containers and Docker Compose v2.
-- Network access for the initial Maven and container downloads.
-- Free local ports 5432 and 8080 (or adjust `DB_PORT`, `APP_PORT`, and host `DB_URL`).
-
-## Docker setup
-
-PowerShell:
+`setup` bổ sung cấu hình thiếu trong `.env`, giữ giá trị đã cấu hình. `start` chạy
+backend/database bằng Compose và Vite trên host. Mở [Login](http://127.0.0.1:5173/login),
+lấy tài khoản từ các cặp `DEMO_*_EMAIL/PASSWORD` trong `.env` cá nhân. Tài khoản và
+BCrypt hash lưu thật trong database; seed chạy lại không reset password/role.
+Không commit `.env`. Nếu volume DB đã tồn tại, phải dùng credentials gốc của volume.
 
 ```powershell
-Copy-Item .env.example .env
-# Edit .env and replace both password placeholders with the same local password.
-docker compose config --quiet
-docker compose up --build -d --wait
-docker compose ps
+.\scripts\local.ps1 -Action status
+.\scripts\local.ps1 -Action stop  # Giữ database volume
 ```
 
-POSIX shells: use `cp .env.example .env`, then the same Docker commands.
-Compose reads `.env` automatically. The backend uses `database:5432` on its private
-Compose network; published ports bind only to localhost. Database data persists in
-the Compose named volume. `docker compose down` stops/removes containers and retains
-data. Changing credentials in `.env` does not change an already initialized database's
-credentials. Do not remove the data volume unless its contents are disposable.
+Backend dùng `APP_PORT`, DB dùng `DB_PORT` trong `.env` (mặc định 8080/5432).
+Swagger ở `http://127.0.0.1:<APP_PORT>/swagger-ui/index.html`. Frontend port 5173
+khác backend port; browser chỉ gọi `/api` qua Vite proxy. JWT nằm trong memory,
+reload/new tab cần login lại. Frontend production container/proxy thuộc A2, chưa có.
 
-## Local development (host JVM)
+Hướng dẫn đầy đủ: [cài đặt/chạy/debug](docs/HUONG_DAN_CAI_DAT_VA_CHAY.md) và
+[env, auth, seed, frontend local](docs/P01_LOCAL.md). `scripts/dev.ps1` chỉ quản lý
+backend/database và smoke/verify; dùng `local.ps1` khi muốn chạy thêm frontend.
 
-Create/edit `.env` as above, then start only the database and export configuration.
-Spring Boot does **not** automatically load `.env`.
+## Runtime hiện có
+
+Đối chiếu main `78f164b`, ngày 10/10/2026. Trạng thái merge và evidence tiếp tục được
+cập nhật tại [progress](docs/phase1-progress.md), không suy ra từ việc prompt đã tồn tại.
+
+| Phần | Đã triển khai | Còn lại theo catalog |
+| --- | --- | --- |
+| Identity / P01 | E01 login, E02 me; JWT/BCrypt/demo seed; CITIZEN/AUTHORITY | Audit A1 khi các API tiếp theo merge |
+| Disaster / C1 | E03–E06; ACTIVE→RESOLVED; DisasterQuery; S05 `/operations/disasters` cho AUTHORITY | UI01-C1 đồng bộ giao diện; C2 triển khai S04 |
+| Reporting / B1 | E07–E09; PENDING, ownership, PostGIS geography, filter/page/sort | B2 verify/withdraw/radius/ReportingQuery; B3 S02/S03 |
+| Shared UI / UI01-A | Crisis Command tokens/layout/primitives và S01 `/login`, API thật | UI01-B audit đủ 6 màn hình sau các owner |
+| Rescue | Chưa có runtime nghiệp vụ | D1 E12–E15 và D2 S06 |
+
+Swagger runtime công bố **E01–E09**. P00 mô tả baseline đích **15 operations/6 screens**;
+E10–E15 chưa mở, S02/S03/S04/S06 chưa có. S01 hiện hiển thị tài khoản sau login vì
+route đích của B3/C2 chưa đăng ký; Authority mở S05 bằng nav Thảm họa.
+
+Flyway đã có **V1–V4**: PostGIS extension, Identity, Disaster, Reporting. Migration
+không chứa credentials/demo accounts; Hibernate validate schema. B2/D1 phải nhận
+version mới từ [ledger](docs/architecture/phase1-module-contracts.md), không sửa V1–V4.
+
+## Nguồn tài liệu và cách phát triển
+
+| Nhu cầu | Đọc ở đâu |
+| --- | --- |
+| Chọn task, owner, dependency, acceptance | [Kế hoạch duy nhất: 16 task lõi + 3 checkpoint UI](docs/PROMPTS_PHA_1_4_NGUOI.md) |
+| Tình trạng hiện tại và bằng chứng merge | [Progress](docs/phase1-progress.md), [handoffs](docs/handoffs/) |
+| HTTP/API/role/race | [P00 contract](docs/api/phase1-contract.md), [OpenAPI](docs/api/phase1-contract.yaml) |
+| Published interfaces và cấp migration | [Module contracts/ledger](docs/architecture/phase1-module-contracts.md) |
+| Kiến trúc và quyết định | [Architecture](docs/architecture/architecture-overview.md), [ADRs](docs/adr/) |
+| UI chung và cách dùng components | [Design system](docs/design/GDRN_UI_DESIGN_SYSTEM.md), [UI01-A](docs/handoffs/UI01-A.md) |
+| Quy tắc phát triển | [AGENTS.md](AGENTS.md) |
+| Tầm nhìn dài hạn/backlog | [Project context](GDRN_CODEX_PROJECT_CONTEXT.md) |
+
+Dependency đi vào domain/application; domain plain Java, không JPA/Spring/HTTP.
+Không truy cập infrastructure/table của module khác. Chiều published query mục tiêu
+là Rescue → Reporting → Disaster; E09 không gọi Rescue, UI tiến độ dùng E09 +E14.
+ReportingQuery/Rescue còn chờ B2/D1. Shared chỉ dành cho technical concerns nhỏ có nhu cầu.
+
+Resource/Alert, map/risk, user administration, refresh/register và event bus ngoài
+scope MVP. Không đưa microservices, broker, Redis hoặc hạ tầng Pha2 vào Pha1;
+Pha2 cần benchmark, vấn đề đo được và ADR. Backlog sản phẩm không tự động là Pha2.
+
+## Stack và kiểm chứng
+
+Java 21 / Spring Boot 3.5.16 / Maven Wrapper 3.9.9, PostgreSQL 16/PostGIS 3.5, Flyway,
+JPA cho Identity/Disaster và JDBC data mapper cho Reporting. React/TypeScript/Vite
+dùng phiên bản pin trong `frontend/package.json` và lockfile; Node pin tại `.nvmrc`.
 
 ```powershell
-docker compose up -d --wait database
-# Load the simple KEY=value development file; do not execute it as a script.
-Get-Content .env | ForEach-Object {
-    if ($_ -match '^([A-Z][A-Z0-9_]*)=(.*)$') {
-        [Environment]::SetEnvironmentVariable($Matches[1], $Matches[2], 'Process')
-    }
-}
-.\mvnw.cmd spring-boot:run "-Dspring-boot.run.profiles=local"
-```
-
-For a trusted, shell-compatible `.env` file in a POSIX shell:
-
-```bash
-chmod +x mvnw
-docker compose up -d --wait database
-set -a
-. ./.env
-set +a
-./mvnw spring-boot:run -Dspring-boot.run.profiles=local
-```
-
-Keep `DB_PASSWORD` equal to `POSTGRES_PASSWORD`, and align host `DB_USERNAME`/`DB_URL`
-with the database user, name and published port. Stop the Compose backend before
-starting a host backend on the same port. `SERVER_PORT` overrides the host HTTP port;
-`APP_PORT` only changes the Compose published port.
-
-## Environment and database
-
-P01 additionally requires `JWT_SECRET_BASE64` and, when using profile `demo`, the six
-`DEMO_*_EMAIL`/`DEMO_*_PASSWORD` values in `.env.example`. Configure these before
-starting the backend; follow [P01 local instructions](docs/P01_LOCAL.md).
-
-| Variable                     | Purpose                                                      |
-| ---------------------------- | ------------------------------------------------------------ |
-| `POSTGRES_DB`                | Compose database name; required                              |
-| `POSTGRES_USER`              | Compose local database owner; required                       |
-| `POSTGRES_PASSWORD`          | Compose local database password; required                    |
-| `DB_PORT`                    | Database host port, default 5432                             |
-| `APP_PORT`                   | Backend host port in Compose, default 8080                   |
-| `DB_URL`                     | Host JDBC URL; local profile defaults to localhost:5432/gdrn |
-| `DB_USERNAME`, `DB_PASSWORD` | Host database credentials; required                          |
-| `SERVER_PORT`                | Host application listen port, default 8080                   |
-
-`.env.example` contains placeholders only; real `.env` files are ignored. The default
-profile requires explicit connection configuration. `application-local.yml` supplies
-a host URL default; `application-test.yml` is on the test classpath only and tests
-override connection values from an isolated container.
-
-Flyway runs at startup: V1 enables PostGIS; V2 creates Identity users and credentials;
-V3 creates Disaster storage, constraints and indexes.
-Migrations contain no demo accounts or secrets. PostGIS extension objects and Flyway
-history are technical metadata. Hibernate
-uses `ddl-auto: validate`; future schema changes must use migrations following:
-**Requirements → Domain Model → Persistence Model → Database Schema → Flyway Migration**.
-
-## Verification
-
-Full verification requires a running Docker daemon; it starts an isolated PostGIS
-container, independent of Compose and `.env`:
-
-```powershell
+# Root; cần JDK21 và Docker, Testcontainers dùng DB riêng, không cần .env
 .\mvnw.cmd clean verify
 docker compose --env-file .env.example config --quiet
+
+# Frontend
+cd frontend
+npm.cmd ci
+npm.cmd run typecheck
+npm.cmd test
+npm.cmd run build
 ```
 
-POSIX: `./mvnw clean verify`. `./mvnw test` runs architecture/unit tests only and is
-useful without Docker, but is **not** the complete verification gate. Failsafe runs
-`*IT` integration tests during `verify`, and fails when Docker is unavailable. Tests
-cover context startup, Flyway, PostGIS spatial behavior, technical endpoints and
-security denials. Future domain/application tests can use JUnit 5 and Mockito.
+`mvnw test` chỉ unit/architecture, không thay thế full verify. Browser thật dùng
+`npm.cmd run test:login` sau khi backend/Vite đã chạy và nạp DEMO_* của cùng DB vào
+process env; xem [hướng dẫn checks](docs/P01_LOCAL.md#checks). Suite hiện bao gồm
+login, S05 và UI01; không phải toàn bộ luồng X2. C1 E2E tạo một disaster test thật
+và kết thúc nó trong DB local, không xóa dữ liệu qua SQL để làm test xanh.
 
-CI runs clean verify on Java 21 for pushes and pull requests, validates Compose,
-builds and starts the runtime stack, runs HTTP smoke checks and stops the stack.
-Image assembly skips test execution only because Docker
-build does not provide the Testcontainers daemon; CI verification runs tests first.
-
-If a machine's Maven mirror returns truncated/corrupt artifacts, this optional command
-uses Maven Central directly and an isolated ignored cache without altering global settings:
-
-```powershell
-.\mvnw.cmd -s .mvn/settings-central.xml "-Dmaven.repo.local=.tools/m2" clean verify
-```
-
-The same settings/cache flags can be passed to `spring-boot:run`. Only use this override
-where direct Maven Central access is allowed by your development environment.
-If an IDE reports unresolved imports, refresh its Maven project configuration before
-running. Avoid simultaneous IDE and Maven compilation into `target`: an IDE can overwrite
-valid Maven classes with error stubs. Pause automatic IDE compilation during CLI
-verification if this occurs; CI and Docker builds use isolated output directories.
-
-## Technical endpoints
-
-- Health: <http://localhost:8080/actuator/health>
-- Liveness: <http://localhost:8080/actuator/health/liveness>
-- Readiness (application + database): <http://localhost:8080/actuator/health/readiness>
-- Swagger UI: <http://localhost:8080/swagger-ui/index.html>
-- OpenAPI JSON: <http://localhost:8080/v3/api-docs>
-
-These GET endpoints are public for development; health details are hidden. OpenAPI
-exposes E01–E09. Login is public; me and Disaster reads require CITIZEN/AUTHORITY
-Bearer authentication; Disaster writes require AUTHORITY. Reporting POST requires
-CITIZEN; Reporting GET allows CITIZEN own reports and AUTHORITY all reports. E10–E15
-remain denied. No generated user, Basic/form login, refresh or registration endpoint exists.
-All app profiles require `JWT_SECRET_BASE64`; demo credentials are environment-only,
-as described in [P01 setup](docs/P01_LOCAL.md).
-Docker reports healthy based on readiness. A database outage makes readiness return
-503 while liveness remains UP; see [ADR 006](docs/adr/006-foundation-readiness.md).
-
-## Architecture rules and scope
-
-See the [architecture overview](docs/architecture/architecture-overview.md),
-[ADRs](docs/adr/) and [agent instructions](AGENTS.md).
-Domain is framework-independent; application depends inward; infrastructure implements
-ports; controllers handle HTTP and invoke use cases. No module may access another
-module's infrastructure or internal implementation. Published cross-module contracts
-are specified in P00 for implementation with their owning use cases. ArchUnit rules tolerate currently absent
-business classes and automatically check future additions; semantic design needs review.
-
-The bootstrap scope is foundation only. Later Phase 1 work covers domain slices and
-a measured baseline. Phase 1 excludes microservices, RabbitMQ, Kafka, Redis,
-Kubernetes, API gateways, service discovery, distributed transactions/tracing,
-external brokers, separate databases per module and production cloud infrastructure.
-Phase 2 may consider selected improvements only after benchmarks identify a concrete
-quality-attribute problem, with an ADR and comparable measurements.
-
-Follow the [single MVP plan](docs/PROMPTS_PHA_1_4_NGUOI.md) and
-[current progress](docs/phase1-progress.md): P01 is merged; review C1 acceptance
-and B1/C1 are integrated. B2 and the first B3 slice can proceed under their task prerequisites.
-They have not been started by P01. Frontend production Docker/proxy is still A2.
+CI hiện chạy backend verify/Compose smoke và frontend typecheck/test/build;
+chưa có full browser E2E job (A2/X2). Test counts và giới hạn môi trường được ghi
+theo từng lần chạy trong handoff, không dùng con số cũ làm bằng chứng cho commit mới.
+Khi Maven mirror/IDE gây lỗi, xem phần xử lý trong [runbook](docs/HUONG_DAN_CAI_DAT_VA_CHAY.md).

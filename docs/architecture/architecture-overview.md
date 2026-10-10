@@ -4,7 +4,7 @@
 
 Global Disaster Response Network is a university simulation of disaster response
 coordination. It is not an operational emergency response system. The repository
-currently provides the foundation plus P01 Identity/login and C1 Disaster slices: one Java 21 Spring Boot
+currently provides the foundation plus P01 Identity/login, C1 Disaster and B1 Reporting: one Java 21 Spring Boot
 application, database infrastructure, technical endpoints, tests, Docker and CI.
 Plain Java Identity `User`, `EmailAddress`, `Role` and their unit tests also exist.
 P01 adds login/me, user/credential persistence and the login SPA. C1 adds the Disaster
@@ -17,6 +17,11 @@ report detail never queries Rescue. E03/E08 list count/items share a REPEATABLE 
 snapshot. Swagger publishes E01–E09; S01/S05 exist, Reporting UI and B2 commands do not.
 See [B1 handoff](../handoffs/B1.md), [integration results](../handoffs/B1-C1-integration.md)
 and [ADR 007](../adr/007-reporting-postgis-data-mapper.md).
+
+UI01-A integrated in `78f164b` (2026-10-10): shared Crisis Command tokens/layout,
+form/state primitives and S01 styling. API/auth/module boundaries did not change.
+S05-specific redesign belongs to UI01-C1. Current task/merge status is maintained
+in [progress](../phase1-progress.md), not inferred from historical handoff wording.
 
 `GDRN_CODEX_PROJECT_CONTEXT.md` is preserved as the long-term project context. Its
 JWT, API examples, proposed tables and completed Phase 1 rubric describe future
@@ -46,7 +51,7 @@ flowchart LR
     Backend --> DB[(PostgreSQL + PostGIS)]
 ```
 
-The main application, shared technical configuration, Identity and Disaster slices,
+The main application, shared technical configuration, Identity/Disaster/Reporting slices,
 login SPA, S05 and remaining module package-info files currently exist. The responsibilities below include the
 long-term backlog; only the four MVP modules are scheduled for business implementation.
 
@@ -111,10 +116,10 @@ An adapter implements the inner interface; the inner layer never imports it.
 
 ArchUnit automatically imports production code and enforces domain independence,
 application isolation, API persistence isolation and cross-module infrastructure
-isolation. Empty selections are permitted per rule because business packages are
-not implemented. This does not disable rules for future code. Semantic rules such
-as business logic placement and defining a published contract still require review;
-the precise public-contract convention will be tested when the first contract exists.
+isolation. Empty selections remain permitted for absent packages; existing business
+classes are checked. These four rules are not proof that every cross-module call
+uses the published contract: review public-contract usage and domain semantics as
+part of the owning use case. DisasterQuery exists; ReportingQuery awaits B2.
 
 ## Database strategy
 
@@ -123,7 +128,10 @@ Hibernate validates schema; it never creates/updates it. Open Session in View is
 `V1__enable_postgis.sql` enables the extension only. P01 V2 creates identity_users
 and identity_credentials with an internal FK; demo data comes from a controlled
 profile, never migration SQL. C1 V3 creates `disasters` with lifecycle, coordinate,
-enum and version constraints plus list indexes. Domain models contain no JPA annotations. PostGIS itself supplies extension
+enum and version constraints plus list indexes. B1 V4 creates reporting_reports with
+WGS84 geography, PENDING-only constraints and stable list indexes. B2 must extend
+verification/withdrawal/spatial indexing using a newly allocated migration; V4 is immutable.
+Domain models contain no JPA annotations. PostGIS itself supplies extension
 objects and Flyway supplies its history table; neither is a business schema.
 The local PostGIS image may pre-enable the extension, so the migration is idempotent.
 The local database owner can install extensions; future restricted deployments
@@ -132,7 +140,7 @@ must arrange extension privileges or provision PostGIS before migration.
 Requirements → Domain Model → Persistence Model → Database Schema → Flyway Migration.
 No database-first business design without a specific future justification. Add
 Hibernate Spatial only when actual mapped spatial attributes require it; SQL verifies
-PostGIS today without an unused ORM spatial dependency.
+PostGIS today through the Reporting JDBC mapper without an unused ORM spatial dependency.
 
 ## Technical HTTP and security foundation
 
@@ -161,11 +169,14 @@ React/TypeScript/Vite S01 confirms login with E02. JWT is memory-only, reload re
 login, logout/401/expiry clear session and per-user state. Feature route exports
 register only implemented pages. S05 exports `/operations/disasters` for AUTHORITY
 with real E03–E06 list/detail/create/edit/resolve flows. See [P01 setup](../P01_LOCAL.md).
+UI01-A uses shared CSS tokens and local SVG without a UI framework or CDN. Feature
+owners consume these primitives and export routes from `features/**/routes.tsx`;
+they do not duplicate auth/client/theme. New shared abstractions require a real consumer.
 
 ## Testing and CI
 
 `mvnw test` runs domain/application/configuration tests and ArchUnit through Surefire without Docker. `mvnw verify` also runs
-Failsafe's `GdrnApplicationIT` using an isolated PostGIS Testcontainer and a real HTTP
+Failsafe's `GdrnApplicationIT` and `ReportingIT` using isolated PostGIS Testcontainers and real HTTP
 server. It verifies application startup, Flyway history, PostGIS spatial behavior,
 public technical endpoints and denied requests, readiness refusal and a real
 database outage/recovery while liveness stays UP. Missing Docker fails integration
@@ -180,11 +191,15 @@ stack and smoke-tests health, both probes, OpenAPI and Swagger before cleanup.
 shutdown and never overwrites an existing `.env`.
 Docker image assembly skips executing tests because Testcontainers requires a
 Docker daemon; the preceding CI verify is the test gate.
+The frontend CI job pins Node from `.nvmrc` and runs npm ci/typecheck/test/build.
+Playwright real login/S05/UI01 tests run locally with env credentials; CI browser
+execution and frontend production container/proxy remain A2/X2 work. Test results
+are dated evidence in handoffs, not guarantees for a later commit.
 
 ## Phase 1 and Phase 2
 
-Reporting/Rescue slices, the expanded A1 security audit and benchmark workloads are
-planned later in Phase 1; P01 authentication and C1 Disaster are implemented.
+Reporting B2 commands/query contract, Reporting UI, Rescue, the expanded A1 security
+audit and benchmark workloads remain planned; P01/C1/B1 and shared UI01-A are implemented.
 Internal events may be introduced in-process; delivery, transaction timing and
 failure semantics are not decided or implemented. Examples such as
 `IncidentReportSubmitted`, `DisasterDetected`, `DisasterEscalated`, `RescueRequested`,

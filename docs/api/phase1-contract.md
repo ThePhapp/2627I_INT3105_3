@@ -122,6 +122,11 @@ phải có phân trang để chọn cả dữ liệu ngoài trang đầu; điề
 S04 có thể điều hướng S06 với query `reportId` (UUID), S06 tải E09 rồi mới điền form;
 đây là trạng thái UI, không phải màn hình/API mới. Các detail là panel cùng route.
 
+Ma trận trên là hành vi đích. Trong giai đoạn chưa có route S03/S04, S01 giữ card
+tài khoản thật tại `/login` theo ADR005; Authority mở S05 bằng nav đã đăng ký.
+Không thêm placeholder route để giả chuyển trang thành công. UI01-A chỉ đổi shared
+presentation/S01; không đổi owner hay API consumer của sáu màn hình.
+
 Mọi màn hình có loading/error/empty, labels, keyboard, responsive và form validation.
 401: xóa token/user/cache, về login; 403: thông báo không đủ quyền; 404: không có dữ
 liệu/không còn truy cập, không suy đoán chủ sở hữu; 409: thông báo, refetch phần liên

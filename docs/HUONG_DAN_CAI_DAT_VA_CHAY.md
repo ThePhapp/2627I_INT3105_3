@@ -3,8 +3,9 @@
 Tài liệu dành cho thành viên mới cài dự án trên máy cá nhân. Chạy các lệnh bên dưới
 tại thư mục gốc repo, nơi có `pom.xml` và `docker-compose.yml`.
 
-**Trạng thái hiện tại:** dự án có backend Spring Boot, PostgreSQL/PostGIS, Flyway,
-Swagger và health check; P01 đã có login/me, credential persistence và frontend login.
+**Trạng thái hiện tại:** E01–E09, S01/S05, shared UI01-A, Flyway V1–V4; xem
+[progress](phase1-progress.md) cho commit/evidence. Backend Spring Boot và PostGIS
+chạy bằng Compose; frontend dev chạy trên host, production frontend còn thuộc A2.
 Đọc [P01: JWT/demo env, Node và frontend](P01_LOCAL.md) trước khi chạy backend.
 Frontend ở cổng 5173, backend không phục vụ trang HTML `/login`.
 
@@ -13,11 +14,14 @@ Frontend ở cổng 5173, backend không phục vụ trang HTML `/login`.
 Sau khi cài Docker Desktop và bật Linux containers, tại thư mục repo:
 
 ```powershell
-.\scripts\dev.ps1 init
-.\scripts\dev.ps1 up
+.\scripts\local.ps1 -Action setup
+.\scripts\local.ps1 -Action start
 ```
 
-`init` chỉ tạo `.env` nếu thiếu, sinh mật khẩu local ngẫu nhiên dùng chung cho
+Luồng trên cần Node 22.14.0 và Docker; mở `http://127.0.0.1:5173/login` rồi dùng tài
+khoản DEMO_* trong `.env`. Xem chi tiết auth/seed/proxy ở [P01_LOCAL](P01_LOCAL.md).
+Nếu chỉ cần backend/database, dùng `scripts/dev.ps1 init` rồi `scripts/dev.ps1 up`.
+`dev.ps1 init` chỉ tạo `.env` nếu thiếu, sinh mật khẩu local ngẫu nhiên dùng chung cho
 database và host backend cùng JWT key base64 riêng; không in secret hoặc ghi đè
 file cũ. Với `.env` trước P01 thiếu JWT key, chạy `scripts/local.ps1 -Action setup`
 để điền cấu hình thiếu và demo accounts, giữ các giá trị đã cấu hình. Nếu đã có volume
@@ -47,11 +51,12 @@ Task phát triển chỉ lấy từ [kế hoạch duy nhất](PROMPTS_PHA_1_4_NG
 
 ## 1. Chuẩn bị công cụ
 
-| Công cụ | Chạy toàn bộ bằng Docker | Chạy backend trực tiếp trên máy |
+| Công cụ | Backend/database bằng Docker | Chạy backend trực tiếp trên máy |
 | --- | --- | --- |
 | Git | Cần | Cần |
 | Docker Desktop hoặc Docker Engine + Compose v2 | Cần | Cần cho database và integration test |
 | JDK 21 | Không cần cài trên máy | Cần; đặt `JAVA_HOME` trỏ đến JDK 21 và thêm Java vào `PATH` |
+| Node 22.14.0 + npm | Cần nếu chạy frontend dev | Cần nếu chạy frontend dev |
 | Maven cài riêng | Không cần | Không cần; repo có Maven Wrapper |
 | PostgreSQL cài riêng | Không cần | Không cần; dùng database trong Docker |
 
@@ -81,11 +86,14 @@ Maven, thư viện Java và Docker images; có thể mất vài phút.
 ## 2. Clone repository
 
 ```text
-git clone https://github.com/ThePhapp/2627I_INT3105_3.git
-cd 2627I_INT3105_3
+git clone https://github.com/ThePhapp/gdrn-disaster-response.git
+cd gdrn-disaster-response
 ```
 
 Nếu đã clone, chỉ cần mở terminal tại thư mục repo, không clone lại.
+Tên thư mục clone cũ có thể vẫn là `2627I_INT3105_3`; không cần đổi tên để phát triển.
+Compose mặc định suy project name từ thư mục: đổi tên thư mục hoặc project name có
+thể làm nó dùng volume khác. Giữ project name/volume đang dùng nếu cần dữ liệu local cũ.
 
 ## 3. Tạo cấu hình môi trường
 
@@ -146,7 +154,7 @@ Nếu đổi tên database hoặc tài khoản, cập nhật cả `DB_URL` và `
 Compose tự kết nối backend với `database:5432` trong mạng Docker, không dùng cổng
 host trong `DB_URL` của `.env`.
 
-## 4. Cách A — Chạy toàn bộ bằng Docker
+## 4. Cách A — Chạy backend và database bằng Docker
 
 Đây là cách nhanh nhất để kiểm tra dự án sau khi clone; không cần cài JDK trên máy.
 Sau khi hoàn thành bước tạo `.env`, chạy:
@@ -169,7 +177,9 @@ Với cổng mặc định, mở:
 | OpenAPI JSON | http://localhost:8080/v3/api-docs |
 
 Nếu đã đặt `APP_PORT=18080`, thay `8080` bằng `18080` trong các URL trên.
-Health check phải trả về `{"status":"UP"}`. Swagger có đúng E01 login/E02 me.
+Health check phải trả về `{"status":"UP"}`. Swagger runtime có E01–E09; baseline
+P00 vẫn mô tả 15 operations đích. Muốn mở giao diện cần Vite theo hướng dẫn local;
+Compose hiện chưa có frontend container.
 Các API tương lai vẫn bị deny; thiếu token 401, role/route không được phép 403.
 
 Xem log nếu khởi động lỗi:
@@ -224,6 +234,11 @@ Kiểm tra Java 21 trong kết quả `mvnw --version`. Sau khi xuất hiện th�
 `Started GdrnApplication`, mở các URL ở bước 4 theo cổng `SERVER_PORT` (mặc định
 8080). Biến `APP_PORT` không thay đổi cổng của backend chạy trực tiếp trên máy.
 
+Các lệnh trên dùng profile `local`, không seed tài khoản. Với DB mới cần tài khoản
+demo, điền đủ DEMO_* và dùng `-Dspring-boot.run.profiles=local,demo` như
+[hướng dẫn auth](P01_LOCAL.md#backend-local--frontend-dev). Đổi profile không reset
+account đã tồn tại. Đặt Vite `API_PROXY_TARGET` theo `SERVER_PORT` của backend host.
+
 Nhấn `Ctrl+C` tại terminal để dừng backend local. Nếu chạy bằng nút Run/Debug của
 IDE, cấu hình các biến môi trường tương tự trong run configuration của IDE; IDE
 đang mở không tự nhận các biến vừa đặt trong một terminal khác.
@@ -254,7 +269,8 @@ SELECT version, description, success FROM flyway_schema_history;
 ```
 
 Gõ `\q` để thoát. Flyway history chỉ xuất hiện sau khi backend đã khởi động và chạy
-migration. V1 bật PostGIS, V2 tạo identity_users và identity_credentials. Chỉ profile
+migration. V1 bật PostGIS, V2 tạo identity_users/identity_credentials, V3 tạo disasters,
+V4 tạo reporting_reports với geography. Version mới tra [ledger](architecture/phase1-module-contracts.md), không tự cấp/sửa migration đã áp dụng. Chỉ profile
 `demo` với đủ env mới tạo ba tài khoản; không có dữ liệu mẫu/mật khẩu trong SQL.
 
 ## 7. Chạy kiểm thử
@@ -276,7 +292,7 @@ chmod +x mvnw
 ```
 
 Kết quả mong đợi là `BUILD SUCCESS`, không có test bị lỗi hoặc bỏ qua. Lệnh này chạy
-architecture tests, unit tests nếu có, integration tests và đóng gói ứng dụng.
+architecture tests, domain/application/configuration unit tests, integration tests và đóng gói ứng dụng.
 Chỉ chạy `mvnw test` sẽ không chạy integration tests nên chưa đủ để xác nhận hoàn tất.
 
 Kiểm tra riêng cấu hình Docker, không cần chứa mật khẩu thật trong output:
@@ -358,7 +374,14 @@ Không bỏ qua test để che lỗi.
 
 P01 chạy frontend dev ở cổng 5173, gọi backend qua Vite proxy. Mở
 `http://127.0.0.1:5173/login`; không dùng cổng backend cho HTML. Nếu Swagger không có
-E01/E02, kiểm tra đang chạy đúng build P01. Xem [P01 setup](P01_LOCAL.md).
+E01–E09, kiểm tra branch/commit và build lại backend hiện tại. Xem [auth/local](P01_LOCAL.md).
+
+### Route `/operations/disasters` chuyển về login hoặc báo không có quyền
+
+JWT chỉ ở memory nên mở tab mới/reload cần login lại. Đăng nhập tài khoản AUTHORITY
+và bấm Thảm họa trên nav trong cùng tab. Citizen bị chặn đúng role; không sửa guard
+hoặc permitAll để mở trang. Nếu login thành công nhưng không thấy dữ liệu, kiểm tra
+Vite proxy trỏ đúng backend port và response E03; không tạo dữ liệu giả thay API.
 
 ## 10. Kiểm tra đã cài thành công
 

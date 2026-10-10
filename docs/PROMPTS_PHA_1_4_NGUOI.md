@@ -17,11 +17,36 @@ chạy toàn bộ liên tiếp. Prompt UI01 nằm trong phụ lục
 `docs/design/GDRN_UI01_PROMPTS.md` nhưng chỉ được chạy theo dependency và trạng thái
 catalog tại file này; phụ lục không phải kế hoạch thay thế.
 
-**Trạng thái nền ngày 10/10/2026:** P00, P01, B1, C1 đã DONE và có evidence trong
-`docs/phase1-progress.md`; runtime có E01–E09, S01/S05 và migrations V1–V4. Không
-chạy lại bốn task này. Công việc mở tiếp theo là UI01-A và B2; chúng có thể chạy song
-song trên nhánh/clone riêng vì UI01-A chỉ sở hữu shared frontend + S01, còn B2 sở hữu
-Reporting backend/schema. UI01-C1 chỉ chạy sau UI01-A merge.
+Trạng thái và commit đã tích hợp được cập nhật tập trung tại
+[phase1-progress.md](phase1-progress.md). Không dùng lịch D1–D15 hoặc một handoff cũ
+để suy ra task đang mở; kiểm tra bảng tiến độ và code của nhánh làm việc trước.
+
+## Cách giữ tài liệu thống nhất
+
+| Câu hỏi | Nguồn sở hữu | Khi cần cập nhật |
+| --- | --- | --- |
+| Làm gì, ai làm, đợi task nào? | Catalog/dependency trong file này | Thay scope, ownership hoặc điều kiện bắt đầu/hoàn tất |
+| Task đã xong và đã merge chưa? | [Progress](phase1-progress.md) | Owner ghi evidence; người tích hợp ghi commit/PR sau merge |
+| API, role, DTO, lỗi, race? | [HTTP/OpenAPI](api/phase1-contract.md) | Producer/consumer cùng review thay đổi contract trước implement |
+| Gọi module nào, cấp migration số nào? | [Module contracts/ledger](architecture/phase1-module-contracts.md) | Owner bàn giao, người tích hợp cấp version khi sẵn sàng merge |
+| Kiến trúc đang chạy và quyết định tại sao? | [Architecture](architecture/architecture-overview.md), ADR | Đồng bộ runtime; ADR mới khi đổi quyết định kiến trúc, giữ lịch sử cũ |
+| Giao diện/components dùng thế nào? | [Design system](design/GDRN_UI_DESIGN_SYSTEM.md), handoff UI mới nhất | Owner shared và feature phối hợp, không đổi nghiệp vụ bằng thiết kế UI |
+| Cài và chạy thế nào? | [Hướng dẫn chạy](HUONG_DAN_CAI_DAT_VA_CHAY.md), [auth/local](P01_LOCAL.md) | Đổi env, scripts, ports, seed, test hoặc cách deploy |
+| Đã kiểm chứng gì trong một task? | `docs/handoffs/<ID>.md` | Ghi commit nền, commands/results, NOT RUN, giới hạn và việc bàn giao |
+
+README là cửa vào và tóm tắt runtime, không sao chép toàn bộ runbook/catalog.
+Context dài hạn là backlog khi khác MVP; không dùng ví dụ lịch sử để mở rộng scope.
+Handoff ghi evidence tại thời điểm chạy: giữ số test và blocker lịch sử, thêm ghi chú
+tích hợp có ngày/commit ở đầu khi cần, không sửa chúng thành kết quả test mới.
+`TODO` chưa làm, `IN_PROGRESS` còn acceptance chưa đạt, `DONE` đã đạt acceptance của
+task; **DONE và đã merge là hai thông tin riêng**. Thiếu kiểm tra phải ghi NOT RUN,
+không quy đổi thành PASS. Dependency chỉ mở khi phần cần thiết đã merge vào nhánh
+làm việc; task nhiều lượt ghi rõ phần đã merge/phần còn chờ trong progress.
+
+Mỗi PR thay đổi behavior cập nhật tài liệu tương ứng trong cùng PR. Khi có lệch giữa
+code và contract, ghi rõ lệch và phối hợp owner; không sửa contract âm thầm để hợp
+thức hóa lỗi. Giữ OpenAPI P00 là baseline đích 15 operations; Swagger runtime chỉ
+công bố operations đã có, không đổi `x-status: planned` của baseline thành bảng tiến độ.
 
 ## Phạm vi, phân công và các mốc MVP
 
@@ -37,9 +62,11 @@ Giả định 15 ngày làm việc, 4 người, mỗi người khoảng 4–5 gi
 benchmark và tài liệu. Đây là ước lượng để lập kế hoạch, không bảo đảm tiến độ chỉ
 bằng cách chạy prompt. Nếu chỉ có 1–2 giờ/người/ngày, cần chốt lại phạm vi/thời hạn.
 
-Quy ước D1–D15 là ngày làm việc, không phải ngày lịch. Nhóm tự gán ngày bắt đầu.
-Cuối D5 phải có luồng gửi báo cáo trên UI; cuối D10 có demo xuyên suốt và đóng băng
-tính năng; D11–D15 chỉ hoàn thiện, đo, sửa lỗi và bàn giao.
+Quy ước D1–D15 trong lịch là ngày làm việc, không phải ngày lịch; **task D1** là Rescue
+backend, khác **ngày D1**. Nhóm tự gán ngày bắt đầu. Mốc D5 hướng tới nền UI đã merge
+và phần gửi/xem report bắt đầu sau UI01-A; không coi UI report đã xong chỉ vì B1 xong.
+Mốc D10 hướng tới demo xuyên suốt/đóng băng tính năng; D11–D15 hoàn thiện, đo và bàn
+giao. Lịch là ước lượng; thiếu dependency thì điều chỉnh ngày, không bỏ acceptance gate.
 
 Tài liệu này thu hẹp scope dài hạn trong `GDRN_CODEX_PROJECT_CONTEXT.md`: frontend
 cơ bản là bắt buộc, nhiều module được hoãn. Không thay đổi kiến trúc Modular Monolith,
@@ -88,7 +115,7 @@ Health/Swagger và file static frontend không tính vào 15 endpoint.
 Không phát sinh endpoint riêng cho dashboard, lookup trạng thái, logout hoặc seed.
 Enum cố định được chia sẻ qua hợp đồng. Logout frontend xóa thông tin phiên trong bộ nhớ.
 
-### 4. Nghiệp vụ và hợp đồng phải thống nhất ở D1
+### 4. Nghiệp vụ và hợp đồng phải thống nhất ở ngày D1 (P00)
 
 - Report: PENDING → VERIFIED hoặc REJECTED, không duyệt lại. Duyệt cần disasterId
   hợp lệ đang ACTIVE; từ chối cần lý do. DELETE chỉ chủ sở hữu + PENDING, soft-delete;
@@ -101,8 +128,8 @@ Enum cố định được chia sẻ qua hợp đồng. Logout frontend xóa th�
 - Một đội chỉ có một mission ASSIGNED/IN_PROGRESS. Chống race ở database bằng
   constraint/locking phù hợp, không chỉ kiểm tra trước rồi insert. Xung đột trả 409.
 - User ID/role lấy từ danh tính đã xác thực; không tin reporterId/role gửi trong body.
-- Tọa độ dùng latitude [-90,90], longitude [-180,180]. Filter cần đủ lat/lon/radius,
-  radius tính theo mét, có giới hạn. Dùng PostGIS geography hoặc cách tương đương
+- Tọa độ dùng latitude [-90,90], longitude [-180,180]. Filter cần đủ lat/lon/radiusMeters,
+  radiusMeters tính theo mét, có giới hạn. Dùng PostGIS geography hoặc cách tương đương
   chính xác về đơn vị; không so khoảng cách độ với mét, không lọc toàn bộ bằng Java.
 - P00 chốt UUID ID, ISO-8601 UTC, page bắt đầu từ 0, size mặc định/tối đa, sort ổn định,
   các trường DTO và status/error code. Dùng PageResponse riêng, không expose Spring Page.
@@ -160,8 +187,10 @@ Nếu repo đã có frontend phù hợp khi chạy prompt, giữ nó thay vì t�
 
 Mọi màn hình có loading/error/empty, label và validation, responsive cơ bản, keyboard
 access; xử lý 401/403/409. Không có nút giả hoặc mock API trong runtime bàn giao.
-Người dân không cần dashboard riêng. Sau login chuyển thẳng đến danh sách báo cáo.
-Frontend demo production được phục vụ cùng origin qua static server và proxy `/api`;
+Người dân không cần dashboard riêng. Khi B3/C2 đã có route, sau login chuyển tới
+`/my-reports` hoặc `/operations/reports` theo role. Trước đó giữ card tài khoản thật
+tại `/login`, chỉ hiện nav feature đã đăng ký; không thêm placeholder cho đủ màn hình.
+Frontend demo production ở A2 sẽ được phục vụ cùng origin qua static server và proxy `/api`;
 đây chỉ là cấu hình phục vụ frontend, không thêm hệ thống API gateway.
 
 ### 6. Phân công và quyền sở hữu file
@@ -178,10 +207,22 @@ của Reporting. Người 2 không sửa class của Rescue để hiển thị t
 Người 1 không phải viết tất cả UI; chỉ thiết lập nền tảng dùng chung và ghép router.
 
 File chung do người 1 điều phối: `pom.xml`, `.env.example`, `docker-compose.yml`,
-Dockerfiles, CI, `frontend/package*.json`, router, API client, global CSS và shared DTO.
+Dockerfiles, CI, `frontend/package*.json`, router, API client, global CSS và technical
+error/security concerns. DTO HTTP và published business DTO thuộc module producer;
+không gom Report/Disaster/Mission DTO vào shared hoặc buộc domain dùng DTO HTTP.
 Owner khác cần thay đổi thì ghi yêu cầu trong handoff; người 1 gộp patch nhỏ, không
 đợi tới tuần 3. `npm install` chỉ chạy ở nhánh chung hoặc theo thỏa thuận để tránh
 lockfile conflict. Khi đã có lockfile, các thành viên dùng `npm ci`.
+
+Feature backend mới cần route policy và OpenAPI runtime: owner module bàn giao
+method/path/role, contract slice và acceptance tests; Người 1 tích hợp matcher và
+đăng ký slice trong config chung trước khi feature được coi là chạy end-to-end.
+Hiện config chung là `SecurityConfiguration`/`OpenApiConfiguration` dưới
+`shared.infrastructure.configuration`; slices ở `src/main/resources/openapi/`.
+Cập nhật runtime slice thuộc owner API; Người 1 review/ghép vào config chung.
+Không chờ A1 cuối kỳ mới mở các API đã implement. Owner có thể kiểm chứng phần
+domain/application/persistence độc lập nhưng phải ghi IN_PROGRESS nếu runtime còn
+bị default-deny; không dùng security test-only permitAll để tuyên bố DONE.
 
 Migration: P00 lập sổ version và merge theo thứ tự Identity → Disaster → Reporting
 → Rescue. Không phát số thấp rồi merge sau khi DB đã áp dụng số cao. Không bật
@@ -224,14 +265,20 @@ C1 + B2 + UI01-A → C2
 B2 + C1 → D1 → D2; UI01-A → D2 phần giao diện
 UI01-A → A1, A2
 B3 + C2 + D2 + UI01-C1 → UI01-B
-UI01-B + A1 + A2 → X1
+UI01-B + A1 hoàn tất + A2 phần runtime → X1
 X1 → X2, C3, D3                         (có thể song song)
-X2 + C3 + D3 + UI01-B → A3
+X2 → A2 hoàn tất CI E2E; X2 + D3 → C3 hoàn tất evidence
+X2 + C3 + D3 + UI01-B + A2 hoàn tất → A3
 ```
 
 Trong thời gian chờ dependency, làm domain analysis, test cases, wireframe hoặc
 review. Test doubles chỉ trong test; không thêm fake API/placeholder production để
 vượt dependency chưa merge. P00/P01 cần ưu tiên review trong ngày vì chặn cả nhóm.
+
+A2 có hai lượt trong **cùng task**: runtime/CI build trước X1 và ghép E2E sau X2.
+X1 không chờ A2 DONE toàn bộ; chỉ chờ phần runtime đã merge và smoke pass. A1 phải
+audit đủ API của B2/D1 trước X1. C3 có thể viết sau X1 nhưng chờ evidence X2/D3 để
+DONE. Không tạo task ID mới hay bỏ cổng A3 để giải quyết các dependency theo phần này.
 
 ### 9. Git và cách dùng AI khi làm nhóm
 
@@ -292,12 +339,15 @@ cầu public repository do nhóm xử lý, không tự publish từ agent).
 
 ### 11. Cách ứng phó chậm tiến độ
 
-Nếu D5 chưa gửi/xem report trên UI, người 1 hỗ trợ tích hợp, dừng mọi trang trí hoặc
-dependency mới; không tiếp tục chia thêm tính năng. Nếu D10 chưa demo xuyên suốt,
+Nếu đến mốc D5 nền UI chưa merge hoặc phần gửi/xem report chưa thể bắt đầu, người 1
+hỗ trợ gỡ dependency, ưu tiên shared accessibility/form cần thiết và luồng thật;
+dừng trang trí tùy chọn hoặc dependency mới. Không bỏ UI01-A để vượt dependency.
+Nếu D10 chưa demo xuyên suốt,
 dừng mở rộng và dành người 3 hỗ trợ integration/review.
 
-Có thể cắt animation, theme tùy chỉnh, tìm kiếm nâng cao, dashboard/map (vốn ngoài
-scope), dữ liệu demo lớn. Không cắt auth/ownership, kiểm tra race, frontend thật,
+Có thể cắt animation tùy chọn, trang trí bổ sung, tìm kiếm nâng cao, dashboard/map
+(vốn ngoài scope), dữ liệu demo lớn. Không cắt shared design/accessibility đã chốt,
+auth/ownership, kiểm tra race, frontend thật,
 migration, tests hoặc bằng chứng benchmark để tuyên bố hoàn tất.
 Nếu vẫn quá tải, báo rõ tiêu chí chưa đạt và xin nhóm điều chỉnh scope/thời hạn;
 không gắn nhãn hoàn thành bằng việc bỏ qua test hoặc đưa mock vào demo.
@@ -326,7 +376,7 @@ không gắn nhãn hoàn thành bằng việc bỏ qua test hoặc đưa mock v�
 | --- | --- | --- | --- | --- |
 | P00 | 1, cả nhóm review | D1 | Repo hiện tại | Contracts, scope, ownership, migrations plan |
 | P01 | 1 | D2–D3 | P00 | Auth thật, SPA nền và login |
-| B1 | 2 | D3–D4 | P01 | Tạo/xem report và ownership |
+| B1 | 2 | D3–D4 | P01; migration sau C1 | Tạo/xem report và ownership |
 | C1 | 3 | D3–D5 | P01 | Disaster backend + UI |
 | UI01-A | 1 | D5–D6 | P00, P01, B1, C1 | Shared design system + cải tạo S01; prompt ở phụ lục UI01 |
 | B2 | 2 | D5–D6 | B1, C1 | Verify/delete/spatial + published report contract |
@@ -336,17 +386,17 @@ không gắn nhãn hoàn thành bằng việc bỏ qua test hoặc đưa mock v�
 | C2 | 3 | D6–D7 | B2, C1, UI01-A | S04 theo design system |
 | D2 | 4 | D8–D9 | D1, UI01-A | S06 theo design system |
 | A1 | 1 | D6–D8 | UI01-A; audit lại khi B2/D1 merge | Security + shared behavior; không làm lại design system |
-| A2 | 1 | D8–D11 | UI01-A; hoàn tất sau UI merge | Docker frontend và CI |
+| A2 | 1 | D8–D11 | UI01-A cho runtime; X2 cung cấp suite để hoàn tất CI E2E | Docker frontend và CI |
 | UI01-B | 1 điều phối + owners | D9 | B3, C2, D2, UI01-C1 | Audit 6 màn hình; gate trước X1; prompt ở phụ lục UI01 |
-| X1 | 1, owner hỗ trợ | D9–D10 | UI01-B, A1, A2 chạy được | Luồng thật xuyên suốt |
+| X1 | 1, owner hỗ trợ | D9–D10 | UI01-B, A1 hoàn tất, A2 phần runtime | Luồng thật xuyên suốt |
 | X2 | 2 | D10–D12 | X1 | Browser E2E và kiểm tra hồi quy |
 | D3 | 4 | Smoke D10, đo D11–D13 | X1 cho số đo chính thức | Script, raw benchmark, báo cáo |
 | C3 | 3 | D11–D13 | X1; thêm kết quả X2/D3 khi có | Kiến trúc, rubric, demo, hướng dẫn |
-| A3 | 1, cả nhóm review | D14–D15 | X2, C3, D3 | Final audit và bàn giao |
+| A3 | 1, cả nhóm review | D14–D15 | X2, C3, D3, UI01-B; mọi task trước DONE/merge, gồm A2 CI E2E | Final audit và bàn giao |
 
 B3/A1/A2/C3 được tiếp tục khi dependency mới sẵn sàng, không đánh dấu hoàn tất ở
-lượt đầu nếu còn phần bị chặn. Ngày thực hiện có thể dịch trong tuần nhưng giữ các
-cổng D5/D10/D15. P00/P01/B1/C1 đã hoàn tất; không dùng bảng để chạy lại lịch sử.
+lượt đầu nếu còn phần bị chặn. Ngày thực hiện có thể dịch nhưng không bỏ các cổng
+acceptance. Trạng thái hiện tại tra progress; không dùng bảng lịch để chạy lại lịch sử.
 
 Ba prompt UI01 nằm trong `docs/design/GDRN_UI01_PROMPTS.md` để giữ chi tiết thiết kế gần
 tài liệu UI. Chúng là phần thực thi của catalog này, không phải kế hoạch thứ hai. Không chạy
@@ -535,8 +585,16 @@ Hoàn thiện E08 filter lat/lon/radiusMeters bằng PostGIS, validate đủ b�
 khoảng cách theo mét và pagination ở DB. Thêm spatial index đúng query; không load
 toàn bộ để lọc trong Java. Test tọa độ gần/xa/biên, invalid/missing params, kết hợp
 filter với ownership không lộ dữ liệu citizen khác.
-Implement Reporting published contract P00 cho Rescue: owner/status/deleted/disaster
-và batch query cần thiết; không trả entity, không gọi ngược Rescue.
+Implement ReportingQuery/ReportSnapshot đúng signature P00 cho Rescue: reporterId,
+status, Optional<LinkedDisaster> và batch query. Missing/soft-deleted trả Optional.empty,
+batch bỏ key; không thêm deleted flag/tombstone hoặc trả entity, không gọi ngược Rescue.
+Chỉ VERIFIED có linked disaster; map enum của Disaster sang enum thuộc Reporting.
+
+B1 đã có V4 với PENDING-only constraint và disaster_id chỉ NULL. Đối chiếu V4/code,
+thiết kế migration mới cho state/link/verification/withdrawal/index cần thiết; không
+chỉ thêm cột rồi để constraint cũ chặn VERIFIED. Giữ snapshot count/items của E08.
+Version nội bộ để concurrency không tự trở thành expectedVersion trong E10/E11 HTTP.
+Gửi method/role E10/E11 và OpenAPI slice cho Người 1 tích hợp policy production.
 
 Test states/role/ownership, invalid disaster, resolved disaster, verify vs withdraw
 concurrency trên PostGIS thật, public contract và regression B1. Không sửa migration
@@ -565,6 +623,9 @@ partial unique index cho team đang active hoặc cách locking có bằng chứ
 Transaction application/service phù hợp với kiến trúc; map conflict thành 409 ổn định.
 Không lộ persistence exception. Authorize authority cho team list/create/update;
 mission list citizen chỉ theo report owner thực sự, kể cả khi truyền reportId khác.
+E14 bắt buộc reportId với citizen và validate visibility qua ReportingQuery trước
+filter mission, kể cả danh sách rỗng; thiếu reportId trả400 theo P00. Gửi policy
+E12–E15/OpenAPI slice cho Người 1 ghép config chung, không tự permitAll future APIs.
 List có page/filter; avoid N+1 qua contract batch hoặc chiến lược đã thống nhất.
 
 Test domain lifecycle và quyền; integration concurrency bằng hai transaction thực
@@ -706,6 +767,8 @@ Pin Node tương thích P01 và lockfile; CI chạy backend clean verify với D
 frontend npm ci/typecheck/test/build, validate Compose và build images. Sau X2 có
 script E2E, thêm CI job chạy với API/DB thật, secrets test sinh tạm và cleanup.
 Không đánh dấu A2 hoàn tất phần E2E trước khi X2 cung cấp implementation.
+Sau lượt runtime, ghi A2 IN_PROGRESS kèm commit phần đã merge và smoke results để
+X1 dùng. Sau X2, tiếp tục cùng A2 để ghép CI E2E và mới xét DONE; không tạo task mới.
 
 Cập nhật hướng dẫn tiếng Việt cho clone sạch, hai cách dev, seed profile demo,
 export env, start/stop, health/Swagger/frontend, test; phân biệt cổng host/container.

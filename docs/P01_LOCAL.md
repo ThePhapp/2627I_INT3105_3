@@ -1,4 +1,8 @@
-# Chạy Identity và frontend P01
+# Chạy auth và frontend local (nền P01)
+
+Đây là runbook đang được cập nhật cho runtime hiện tại, không phải báo cáo trạng thái
+lịch sử P01. Trạng thái task/merge xem [progress](phase1-progress.md); evidence riêng
+P01 xem [handoff](handoffs/P01.md). Hướng dẫn cài chung ở [runbook](HUONG_DAN_CAI_DAT_VA_CHAY.md).
 
 ## Chạy local lâu dài trên Windows
 
@@ -35,9 +39,10 @@ powershell -NoProfile -ExecutionPolicy Bypass -File scripts/local.ps1 -Action st
 Không dùng `down -v`. Đây là local development: frontend Vite chạy trên host; frontend
 container phục vụ production vẫn thuộc A2. Những cách chạy thủ công dưới đây vẫn dùng được.
 
-Hiện có E01 `POST /api/auth/login`, E02 `GET /api/auth/me` và S01 `/login`.
-E03–E15/S02–S06 chưa triển khai. Không register/refresh/logout API.
-Yêu cầu: Java 21, Docker đang chạy, Node **22.14.0**, npm đi kèm Node. CI dùng cùng
+Runtime hiện có E01–E09, S01 `/login`, S05 `/operations/disasters` và theme UI01-A.
+E10–E15/S02/S03/S04/S06 chưa triển khai. Không register/refresh/logout API.
+Yêu cầu: Docker đang chạy, Node **22.14.0**, npm đi kèm Node; Java 21 chỉ cần cho
+backend host/Maven tests, không cần khi chạy backend bằng Compose. CI dùng cùng
 Node từ `frontend/.nvmrc`. [Hướng dẫn DB/Docker](HUONG_DAN_CAI_DAT_VA_CHAY.md) vẫn áp dụng.
 
 ## Environment và tài khoản
@@ -83,8 +88,10 @@ docker compose up -d --wait database
 ```
 
 Nếu chỉ muốn backend không seed, dùng profiles `local`; vẫn phải có JWT key.
-Maven/Flyway nâng V1 lên V2, không xóa volume. Dừng Compose backend trước nếu tranh
-cổng. Host JDBC URL dùng `DB_PORT`; backend host dùng `SERVER_PORT`, mặc định 8080.
+Maven/Flyway áp dụng migrations chưa chạy theo thứ tự (hiện V1–V4), không xóa volume.
+Dừng Compose backend trước nếu tranh cổng. Host JDBC URL `DB_URL` phải chứa đúng
+host port `DB_PORT`; Spring không tự ghép DB_PORT vào URL. Backend host dùng
+`SERVER_PORT`, mặc định8080; `APP_PORT` chỉ là cổng publish của Compose.
 
 Terminal thứ hai:
 
@@ -104,10 +111,11 @@ Token TTL 900 giây; reload/new tab phải login lại. Logout clear user/token/
 không revoke token cũ. Phiên xác nhận từ `/me`, không tin riêng response login.
 
 Hiện sau login S01 hiển thị tài khoản thật và nút logout; chưa có report pages.
+Authority mở S05 bằng link Thảm họa trên nav; Citizen không có link này.
 Khi B3/C2 export routes thật, auto redirect theo role và navigation tự đăng ký.
-Không tạo placeholder S02–S06. Router tự deny role sai; backend vẫn là security gate.
+Không tạo placeholder cho các màn hình còn thiếu. Router tự deny role sai; backend vẫn là security gate.
 
-Swagger: `http://localhost:8080/swagger-ui/index.html`, chỉ E01/E02 đã implemented;
+Swagger: `http://localhost:8080/swagger-ui/index.html` (đổi port theo cấu hình), công bố E01–E09;
 health: `/actuator/health`. Các API tương lai vẫn deny. Không bật DEBUG/TRACE cho
 request body, JWT hoặc Hibernate binds; app đặt mức INFO cho web/security, OFF binds.
 
@@ -145,6 +153,14 @@ $env:E2E_BASE_URL = 'http://127.0.0.1:5173'
 npm run test:login
 ```
 
-Smoke kiểm tra ba tài khoản, sai/đúng password, reload, logout, storage trống và form
-mobile. Trace tắt để không lưu credentials/token. Test login chỉ thuộc P01; full flow
-E2E vẫn thuộc X2. `test-results/` ignored; không commit dữ liệu phiên.
+Tên script `test:login` được giữ tương thích nhưng chạy toàn bộ `frontend/e2e/`:
+login ba tài khoản, S05 create/edit/resolve và UI01 keyboard/responsive/role guard.
+S05 test tạo một disaster kiểm thử thật đã RESOLVED trong DB đang dùng; không chạy
+trên dữ liệu production. Trace tắt để không lưu credentials/token. Full flow E2E
+vẫn thuộc X2; CI chưa tự chạy browser suite. `test-results/` ignored.
+
+Chạy `npm ci` khi Vite đã dừng để tránh Windows khóa native dependency. Script local
+quản lý Vite thì dùng `-Action stop` trước, không tắt process khác bằng tên chung.
+Trên Windows PowerShell, ưu tiên chạy script trực tiếp; redirect `*>` có thể biến
+native stderr progress/warning thành lỗi PowerShell. Nếu log báo BUILD SUCCESS nhưng
+process exit khác0, chạy lại trực tiếp và đối chiếu reports, không bỏ qua exit code.

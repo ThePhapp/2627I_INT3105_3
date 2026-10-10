@@ -7,6 +7,9 @@ File này là **phụ lục prompt thực thi** được catalog chính tại
 `docs/PROMPTS_PHA_1_4_NGUOI.md` viện dẫn. Nó không phải kế hoạch/task catalog thứ hai,
 không thay đổi 15 endpoint, 6 màn hình, owner hoặc dependency nghiệp vụ đã chốt.
 
+Tra [progress](../phase1-progress.md) trước khi copy prompt. Khối UI01-A được giữ để
+truy nguyên yêu cầu; không chạy lại nếu nhánh đã chứa implementation hoàn tất.
+
 **Điều kiện bắt đầu:** P00, P01, C1 và B1 đã merge vào nhánh tích hợp (nếu mới hoàn thành trên nhánh riêng, phải review/merge trước). Đặt file design system vào đúng `docs/design/GDRN_UI_DESIGN_SYSTEM.md` và commit để mọi nhánh cùng đọc được.
 
 **Cách dùng:** kiểm tra UI task tương ứng trong catalog chính rồi copy nguyên một khối
