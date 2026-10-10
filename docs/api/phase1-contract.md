@@ -1,10 +1,9 @@
 # Hợp đồng HTTP/UI Pha 1 — P00
 
-Runtime tích hợp: P01 E01/E02/S01, C1 E03–E06/S05, B1 E07–E09 đã có.
-E08 hiện có page/size/sort/status/type/disasterId; radius thuộc B2 và bị 400 nếu gửi
-lat/lon/radiusMeters lúc này. YAML giữ baseline đích 15 operations; runtime chỉ công
-bố E01–E09. Xem [B1](../handoffs/B1.md), [C1](../handoffs/C1.md) và
-[kết quả tích hợp](../handoffs/B1-C1-integration.md). S02/S03 và E10–E15 chưa có.
+Runtime nhánh B2: P01 E01/E02/S01, C1 E03–E06/S05, B1/B2 E07–E11 đã có.
+E08 hỗ trợ đủ lat/lon/radiusMeters cùng các filter trước. YAML giữ baseline đích
+15 operations; Swagger runtime công bố E01–E11. Xem [handoff B2](../handoffs/B2.md)
+cho trạng thái review/merge và kiểm chứng. E12–E15 và S02/S03/S04/S06 chưa có.
 
 Ngày chốt thiết kế: 08/10/2026. Đây là baseline đích; trạng thái runtime được ghi ở
 đầu tài liệu và theo handoff từng task. Chuẩn máy đọc là

@@ -3,7 +3,7 @@
 Tài liệu dành cho thành viên mới cài dự án trên máy cá nhân. Chạy các lệnh bên dưới
 tại thư mục gốc repo, nơi có `pom.xml` và `docker-compose.yml`.
 
-**Trạng thái hiện tại:** E01–E09, S01/S05, shared UI01-A, Flyway V1–V4; xem
+**Trạng thái hiện tại:** E01–E11, S01/S05, shared UI01-A, Flyway V1–V5 trên nhánh B2; xem
 [progress](phase1-progress.md) cho commit/evidence. Backend Spring Boot và PostGIS
 chạy bằng Compose; frontend dev chạy trên host, production frontend còn thuộc A2.
 Đọc [P01: JWT/demo env, Node và frontend](P01_LOCAL.md) trước khi chạy backend.
@@ -177,7 +177,7 @@ Với cổng mặc định, mở:
 | OpenAPI JSON | http://localhost:8080/v3/api-docs |
 
 Nếu đã đặt `APP_PORT=18080`, thay `8080` bằng `18080` trong các URL trên.
-Health check phải trả về `{"status":"UP"}`. Swagger runtime có E01–E09; baseline
+Health check phải trả về `{"status":"UP"}`. Swagger runtime có E01–E11; baseline
 P00 vẫn mô tả 15 operations đích. Muốn mở giao diện cần Vite theo hướng dẫn local;
 Compose hiện chưa có frontend container.
 Các API tương lai vẫn bị deny; thiếu token 401, role/route không được phép 403.
@@ -374,7 +374,7 @@ Không bỏ qua test để che lỗi.
 
 P01 chạy frontend dev ở cổng 5173, gọi backend qua Vite proxy. Mở
 `http://127.0.0.1:5173/login`; không dùng cổng backend cho HTML. Nếu Swagger không có
-E01–E09, kiểm tra branch/commit và build lại backend hiện tại. Xem [auth/local](P01_LOCAL.md).
+E01–E11, kiểm tra branch/commit và build lại backend hiện tại. Xem [auth/local](P01_LOCAL.md).
 
 ### Route `/operations/disasters` chuyển về login hoặc báo không có quyền
 

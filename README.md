@@ -35,24 +35,25 @@ backend/database và smoke/verify; dùng `local.ps1` khi muốn chạy thêm fro
 
 ## Runtime hiện có
 
-Đối chiếu main `78f164b`, ngày 10/10/2026. Trạng thái merge và evidence tiếp tục được
+B2 trên nhánh `feat/b2-report-verification`, nền main `ca3751d`, ngày 10/10/2026 (chờ review/merge). Trạng thái merge và evidence tiếp tục được
 cập nhật tại [progress](docs/phase1-progress.md), không suy ra từ việc prompt đã tồn tại.
 
 | Phần | Đã triển khai | Còn lại theo catalog |
 | --- | --- | --- |
 | Identity / P01 | E01 login, E02 me; JWT/BCrypt/demo seed; CITIZEN/AUTHORITY | Audit A1 khi các API tiếp theo merge |
 | Disaster / C1 | E03–E06; ACTIVE→RESOLVED; DisasterQuery; S05 `/operations/disasters` cho AUTHORITY | UI01-C1 đồng bộ giao diện; C2 triển khai S04 |
-| Reporting / B1 | E07–E09; PENDING, ownership, PostGIS geography, filter/page/sort | B2 verify/withdraw/radius/ReportingQuery; B3 S02/S03 |
+| Reporting / B1+B2 | E07–E11; verify/reject, soft-delete, ownership/radius/page/sort, ReportingQuery | B3 S02/S03; C2 S04 |
 | Shared UI / UI01-A | Crisis Command tokens/layout/primitives và S01 `/login`, API thật | UI01-B audit đủ 6 màn hình sau các owner |
 | Rescue | Chưa có runtime nghiệp vụ | D1 E12–E15 và D2 S06 |
 
-Swagger runtime công bố **E01–E09**. P00 mô tả baseline đích **15 operations/6 screens**;
-E10–E15 chưa mở, S02/S03/S04/S06 chưa có. S01 hiện hiển thị tài khoản sau login vì
+Swagger runtime công bố **E01–E11**. P00 mô tả baseline đích **15 operations/6 screens**;
+E12–E15 chưa mở, S02/S03/S04/S06 chưa có. S01 hiện hiển thị tài khoản sau login vì
 route đích của B3/C2 chưa đăng ký; Authority mở S05 bằng nav Thảm họa.
 
-Flyway đã có **V1–V4**: PostGIS extension, Identity, Disaster, Reporting. Migration
-không chứa credentials/demo accounts; Hibernate validate schema. B2/D1 phải nhận
-version mới từ [ledger](docs/architecture/phase1-module-contracts.md), không sửa V1–V4.
+Flyway trên nhánh B2 có **V1–V5**: V5 mở lifecycle Reporting, metadata duyệt/rút và GiST.
+Migration không chứa credentials/demo accounts; Hibernate validate schema. D1 nhận
+version tiếp theo từ [ledger](docs/architecture/phase1-module-contracts.md) sau B2 merge.
+Xem [handoff B2](docs/handoffs/B2.md) cho contract, API examples và evidence.
 
 ## Nguồn tài liệu và cách phát triển
 
@@ -70,7 +71,7 @@ version mới từ [ledger](docs/architecture/phase1-module-contracts.md), khôn
 Dependency đi vào domain/application; domain plain Java, không JPA/Spring/HTTP.
 Không truy cập infrastructure/table của module khác. Chiều published query mục tiêu
 là Rescue → Reporting → Disaster; E09 không gọi Rescue, UI tiến độ dùng E09 +E14.
-ReportingQuery/Rescue còn chờ B2/D1. Shared chỉ dành cho technical concerns nhỏ có nhu cầu.
+ReportingQuery đã có trong B2; Rescue còn chờ D1. Shared chỉ dành cho technical concerns nhỏ có nhu cầu.
 
 Resource/Alert, map/risk, user administration, refresh/register và event bus ngoài
 scope MVP. Không đưa microservices, broker, Redis hoặc hạ tầng Pha2 vào Pha1;

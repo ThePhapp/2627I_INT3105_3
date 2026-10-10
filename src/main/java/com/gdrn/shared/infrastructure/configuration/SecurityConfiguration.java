@@ -41,6 +41,8 @@ public class SecurityConfiguration {
                         .requestMatchers(HttpMethod.POST, "/api/disasters").hasRole("AUTHORITY")
                         .requestMatchers(HttpMethod.PATCH, "/api/disasters/**").hasRole("AUTHORITY")
                         .requestMatchers(HttpMethod.POST, "/api/reports").hasRole("CITIZEN")
+                        .requestMatchers(HttpMethod.PATCH, "/api/reports/*/verification").hasRole("AUTHORITY")
+                        .requestMatchers(HttpMethod.DELETE, "/api/reports/*").hasRole("CITIZEN")
                         .requestMatchers(HttpMethod.GET, "/api/reports", "/api/reports/*")
                         .hasAnyRole("CITIZEN", "AUTHORITY")
                         .anyRequest().denyAll())

@@ -17,6 +17,18 @@ jobs:
           cache: maven
       - name: Compile, test architecture, integrate with PostGIS, and package
         run: bash ./mvnw --batch-mode --no-transfer-progress clean verify
+      - name: Publish unit and integration test reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: backend-test-reports
+          path: |
+            target/surefire-reports/*.xml
+            target/surefire-reports/*.txt
+            target/failsafe-reports/*.xml
+            target/failsafe-reports/*.txt
+          if-no-files-found: warn
+          retention-days: 7
       - name: Validate Compose
         run: docker compose --env-file .env.example config --quiet
       - name: Build and smoke-test the running foundation
