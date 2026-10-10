@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react'
+import { render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { describe, expect, it, vi } from 'vitest'
 import { DisasterForm } from './DisasterForm'
@@ -19,6 +19,7 @@ describe('DisasterForm', () => {
     expect(screen.getByLabelText('Tên thảm họa')).toHaveAttribute('aria-invalid', 'true')
     expect(screen.getByLabelText('Mô tả')).toHaveAttribute('aria-invalid', 'true')
     expect(create).not.toHaveBeenCalled()
+    await waitFor(() => expect(screen.getByLabelText('Tên thảm họa')).toHaveFocus())
 
     const user = userEvent.setup()
     await user.type(screen.getByLabelText('Tên thảm họa'), '  Lũ miền Trung  ')
