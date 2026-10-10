@@ -1,7 +1,8 @@
 # Pha 1 — published contracts và migration ledger
 
 **Contracts P00; tích hợp B1/C1 09/10/2026:** Identity V2, Disaster V3 và Reporting V4 đã có;
-DisasterQuery đã triển khai trong C1. ReportingQuery thuộc B2, chưa có trên main.
+DisasterQuery đã triển khai trong C1. ReportingQuery được triển khai trên nhánh B2
+từ ca3751d; xem [handoff B2](../handoffs/B2.md) và progress cho review/merge.
 Theo [kế hoạch](../PROMPTS_PHA_1_4_NGUOI.md), [HTTP/UI contract](../api/phase1-contract.md)
 và [ADR 005](../adr/005-phase1-mvp-auth-frontend.md).
 
@@ -34,8 +35,7 @@ ngoài scope. Provisioning demo nội bộ thuộc P01 đã có; không cấm bo
 
 ## Published signatures và trạng thái triển khai
 
-DisasterQuery bên dưới đã có ở C1; ReportingQuery là contract đích của B2, chưa có
-runtime. Các type public đặt ở file Java riêng khi triển khai; đoạn dưới mô tả
+DisasterQuery bên dưới đã có ở C1; ReportingQuery đã có trên nhánh B2. Các type public đặt ở file Java riêng khi triển khai; đoạn dưới mô tả
 signature, không yêu cầu tạo placeholder hay một file chứa nhiều public types.
 
 Trong `com.gdrn.disaster.application.contract`:
@@ -172,7 +172,7 @@ P01 cập nhật ledger: User giữ id/email/role; credential hash là concern a
 infrastructure, không nằm trong User. ORM maps hai entity riêng, credential có FK nội
 Identity tới user; email unique. V2 kế tiếp V1, đã merge qua e4b449b. V3 Disaster
 đã có trên main tại 3220765; V4 Reporting được cấp trong tích hợp trên nền bacf960
-sau khi đối chiếu code và Flyway history. B2 phải nhận version mới khi sẵn sàng. [P01 handoff](../handoffs/P01.md) ghi validation lịch sử.
+sau khi đối chiếu code và Flyway history. V5 của B2 được ghi ở ledger phía trên; kiểm tra collision lại trước merge. [P01 handoff](../handoffs/P01.md) ghi validation lịch sử.
 
 Demo data được mô tả trong [HTTP contract](../api/phase1-contract.md#dữ-liệu-mẫu-và-json)
 chỉ để chuẩn bị. P01/D1 dùng controlled demo profile idempotent, credential từ env;
